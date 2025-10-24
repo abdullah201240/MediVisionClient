@@ -93,6 +93,16 @@ const MainTabsScreen = () => {
     setActiveTab('medicineDetails');
   };
 
+  const handleMedicineScan = (medicineData: any) => {
+    setSelectedMedicine(medicineData);
+    setActiveTab('medicineDetails');
+  };
+
+  const handleMedicineUpload = (medicineData: any) => {
+    setSelectedMedicine(medicineData);
+    setActiveTab('medicineDetails');
+  };
+
   const renderActiveScreen = () => {
     switch (activeTab) {
       case 'home':
@@ -106,9 +116,10 @@ const MainTabsScreen = () => {
             setActiveTab('history');
           }} 
           onMedicineSelect={handleMedicineSelect}
+          onMedicineUpload={handleMedicineUpload}
         />;
       case 'scan':
-        return <ScanContent />;
+        return <ScanContent onMedicineScan={handleMedicineScan} />;
       case 'history':
         return <HistoryContent onMedicineSelect={handleMedicineSelect} />;
       case 'profile':
@@ -133,7 +144,7 @@ const MainTabsScreen = () => {
       case 'medicineDetails':
         return <MedicineDetailsScreen 
           medicine={selectedMedicine} 
-          onBackPress={() => setActiveTab('history')} 
+          onBackPress={() => setActiveTab('scan')} 
         />;
       default:
         return <DashboardContent 
@@ -146,6 +157,7 @@ const MainTabsScreen = () => {
             setActiveTab('history');
           }} 
           onMedicineSelect={handleMedicineSelect}
+          onMedicineUpload={handleMedicineUpload}
         />;
     }
   };

@@ -5,13 +5,100 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 
-const ScanContent = () => {
+type ScanContentProps = {
+  onMedicineScan?: (medicineData: any) => void;
+};
+
+const ScanContent: React.FC<ScanContentProps> = ({ onMedicineScan }) => {
   const { t } = useLanguage();
   const { isDarkMode } = useTheme();
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<any>(null);
   const [scanning, setScanning] = useState(false);
+
+  // Sample medicine data for different barcodes
+  const medicineDatabase: any = {
+    "1234567890128": {
+      id: '1',
+      name: 'Napa Extra',
+      genericName: 'Paracetamol + Caffeine',
+      manufacturer: 'Beximco Pharmaceuticals Ltd.',
+      dosage: '500mg + 65mg',
+      description: 'Napa Extra is a combination of Paracetamol and Caffeine. Paracetamol is an analgesic (painkiller) and antipyretic (fever reducer). Caffeine is added to enhance the pain-relieving effect of Paracetamol.',
+      indications: [
+        'Fever',
+        'Headache',
+        'Migraine',
+        'Toothache',
+        'Muscle pain',
+        'Joint pain',
+        'Menstrual pain'
+      ],
+      contraindications: [
+        'Hypersensitivity to paracetamol or caffeine',
+        'Severe hepatic impairment',
+        'Severe renal impairment',
+        'Glucose-6-phosphate dehydrogenase deficiency'
+      ],
+      sideEffects: [
+        'Nausea',
+        'Vomiting',
+        'Stomach pain',
+        'Allergic skin reactions',
+        'Liver damage (with overdose)'
+      ],
+      precautions: [
+        'Use with caution in patients with liver disease',
+        'Avoid alcohol consumption',
+        'Do not exceed recommended dose',
+        'Consult doctor if symptoms persist'
+      ],
+      interactions: [
+        'Cholestyramine may reduce absorption',
+        'Warfarin interaction may increase bleeding risk',
+        'Alcohol may increase liver toxicity'
+      ],
+      storage: 'Store in a cool, dry place away from direct sunlight. Keep out of reach of children.'
+    },
+    "9876543210987": {
+      id: '2',
+      name: 'Paracetamol',
+      genericName: 'Paracetamol',
+      manufacturer: 'Square Pharmaceuticals Ltd.',
+      dosage: '500mg',
+      description: 'Paracetamol is a common painkiller used to treat aches and pains. It can also be used to reduce a high temperature (fever).',
+      indications: [
+        'Fever',
+        'Headache',
+        'Muscle aches',
+        'Arthritis',
+        'Toothache',
+        'Cold and flu symptoms'
+      ],
+      contraindications: [
+        'Severe liver disease',
+        'Severe kidney disease',
+        'Alcoholism'
+      ],
+      sideEffects: [
+        'Nausea',
+        'Stomach pain',
+        'Loss of appetite',
+        'Liver damage (with overdose)'
+      ],
+      precautions: [
+        'Do not exceed recommended dose',
+        'Avoid alcohol',
+        'Consult doctor if symptoms persist'
+      ],
+      interactions: [
+        'Alcohol may increase liver toxicity',
+        'Warfarin may increase bleeding risk'
+      ],
+      storage: 'Store below 30°C, away from moisture and light.'
+    }
+  };
 
   useEffect(() => {
     if (!permission) {
@@ -42,16 +129,26 @@ const ScanContent = () => {
 
   const handleBarcodeScanned = ({ type, data }: { type: string; data: string }) => {
     setScanning(true);
-    Alert.alert(
-      t('barcodeScanned'),
-      `${t('barcodeType')}: ${type}\n${t('data')}: ${data}`,
-      [
-        {
-          text: t('ok'),
-          onPress: () => setScanning(false),
-        },
-      ]
-    );
+    
+    // Check if we have medicine data for this barcode
+    const medicineData = medicineDatabase[data];
+    
+    if (medicineData && onMedicineScan) {
+      // Navigate to medicine details page
+      onMedicineScan(medicineData);
+    } else {
+      // Show alert with scanned data
+      Alert.alert(
+        t('barcodeScanned'),
+        `${t('barcodeType')}: ${type}\n${t('data')}: ${data}`,
+        [
+          {
+            text: t('ok'),
+            onPress: () => setScanning(false),
+          },
+        ]
+      );
+    }
   };
 
   return (

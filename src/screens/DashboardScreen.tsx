@@ -15,6 +15,7 @@ type DashboardContentProps = {
   onScanPress?: () => void;
   onHistoryPress?: () => void;
   onMedicineSelect?: (medicineId: string) => void;
+  onMedicineUpload?: (medicineData: any) => void;
 };
 
 // Define navigation param list
@@ -26,7 +27,7 @@ type RootStackParamList = {
   LanguageSelection: undefined;
 };
 
-const DashboardContent = ({ onScanPress, onHistoryPress, onMedicineSelect }: DashboardContentProps) => {
+const DashboardContent: React.FC<DashboardContentProps> = ({ onScanPress, onHistoryPress, onMedicineSelect, onMedicineUpload }) => {
   const { t } = useLanguage();
   const { isDarkMode } = useTheme();
   
@@ -44,6 +45,45 @@ const DashboardContent = ({ onScanPress, onHistoryPress, onMedicineSelect }: Das
 
   // Fallback navigation if props are not provided
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+
+  // Sample medicine data for uploaded images
+  const sampleMedicineData = {
+    id: '3',
+    name: 'Vitamin C',
+    genericName: 'Ascorbic Acid',
+    manufacturer: 'HealthPlus Pharmaceuticals',
+    dosage: '500mg',
+    description: 'Vitamin C (ascorbic acid) is a water-soluble vitamin that helps maintain healthy skin, blood vessels, bones, and cartilage. It acts as an antioxidant, protecting cells from damage caused by free radicals.',
+    indications: [
+      'Dietary supplement for vitamin C deficiency',
+      'Immune system support',
+      'Collagen synthesis',
+      'Antioxidant protection'
+    ],
+    contraindications: [
+      'Hypersensitivity to ascorbic acid',
+      'History of kidney stones',
+      'Severe renal impairment'
+    ],
+    sideEffects: [
+      'Nausea',
+      'Diarrhea',
+      'Stomach cramps',
+      'Headache',
+      'Kidney stones (with high doses)'
+    ],
+    precautions: [
+      'Use with caution in patients with kidney disease',
+      'Avoid high doses during pregnancy',
+      'May interact with certain medications'
+    ],
+    interactions: [
+      'Aspirin may decrease vitamin C absorption',
+      'Estrogen may increase vitamin C levels',
+      'Warfarin effectiveness may be reduced'
+    ],
+    storage: 'Store in a cool, dry place away from direct sunlight. Keep container tightly closed.'
+  };
 
   useEffect(() => {
     // Entrance animation sequence
@@ -140,8 +180,12 @@ const DashboardContent = ({ onScanPress, onHistoryPress, onMedicineSelect }: Das
         `${result.assets.length} ${t('imagesSelectedMessage')}`,
         [{ text: t('ok') }]
       );
-      // Here you would typically process the selected images
-      // For example, upload them to a server or display them in the app
+      
+      // Navigate to medicine details page with sample data
+      // In a real app, you would process the image and get actual medicine data
+      if (onMedicineUpload) {
+        onMedicineUpload(sampleMedicineData);
+      }
     }
   };
 
