@@ -14,6 +14,7 @@ import { useTheme } from '../context/ThemeContext';
 type DashboardContentProps = {
   onScanPress?: () => void;
   onHistoryPress?: () => void;
+  onMedicineSelect?: (medicineId: string) => void;
 };
 
 // Define navigation param list
@@ -25,7 +26,7 @@ type RootStackParamList = {
   LanguageSelection: undefined;
 };
 
-const DashboardContent = ({ onScanPress, onHistoryPress }: DashboardContentProps) => {
+const DashboardContent = ({ onScanPress, onHistoryPress, onMedicineSelect }: DashboardContentProps) => {
   const { t } = useLanguage();
   const { isDarkMode } = useTheme();
   
@@ -309,7 +310,7 @@ const DashboardContent = ({ onScanPress, onHistoryPress }: DashboardContentProps
       </Animated.View>
 
       {/* Recently Scanned - Using the new component */}
-      <RecentlyScanned />
+      <RecentlyScanned onMedicineSelect={onMedicineSelect} />
     </Animated.ScrollView>
   );
 };

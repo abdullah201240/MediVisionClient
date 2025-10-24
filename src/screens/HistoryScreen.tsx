@@ -1,9 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 
-const HistoryContent = () => {
+type HistoryScreenProps = {
+  onMedicineSelect?: (medicine: any) => void;
+};
+
+const HistoryContent: React.FC<HistoryScreenProps> = ({ onMedicineSelect }) => {
   const { t } = useLanguage();
   const { isDarkMode } = useTheme();
   
@@ -16,6 +20,95 @@ const HistoryContent = () => {
     { id: 5, name: 'Antibiotic', date: '2023-05-08', time: '11:30 AM' },
   ];
 
+  // Sample medicine data for details
+  const medicineData: any = {
+    1: {
+      id: '1',
+      name: t('paracetamol'),
+      genericName: 'Paracetamol',
+      manufacturer: 'Square Pharmaceuticals Ltd.',
+      dosage: '500mg',
+      description: 'Paracetamol is a common painkiller used to treat aches and pains. It can also be used to reduce a high temperature (fever).',
+      indications: [
+        'Fever',
+        'Headache',
+        'Muscle aches',
+        'Arthritis',
+        'Toothache',
+        'Cold and flu symptoms'
+      ],
+      contraindications: [
+        'Severe liver disease',
+        'Severe kidney disease',
+        'Alcoholism'
+      ],
+      sideEffects: [
+        'Nausea',
+        'Stomach pain',
+        'Loss of appetite',
+        'Liver damage (with overdose)'
+      ],
+      precautions: [
+        'Do not exceed recommended dose',
+        'Avoid alcohol',
+        'Consult doctor if symptoms persist'
+      ],
+      interactions: [
+        'Alcohol may increase liver toxicity',
+        'Warfarin may increase bleeding risk'
+      ],
+      storage: 'Store below 30°C, away from moisture and light.'
+    },
+    2: {
+      id: '2',
+      name: t('napaExtra'),
+      genericName: 'Paracetamol + Caffeine',
+      manufacturer: 'Beximco Pharmaceuticals Ltd.',
+      dosage: '500mg + 65mg',
+      description: 'Napa Extra is a combination of Paracetamol and Caffeine. Paracetamol is an analgesic (painkiller) and antipyretic (fever reducer). Caffeine is added to enhance the pain-relieving effect of Paracetamol.',
+      indications: [
+        'Fever',
+        'Headache',
+        'Migraine',
+        'Toothache',
+        'Muscle pain',
+        'Joint pain',
+        'Menstrual pain'
+      ],
+      contraindications: [
+        'Hypersensitivity to paracetamol or caffeine',
+        'Severe hepatic impairment',
+        'Severe renal impairment',
+        'Glucose-6-phosphate dehydrogenase deficiency'
+      ],
+      sideEffects: [
+        'Nausea',
+        'Vomiting',
+        'Stomach pain',
+        'Allergic skin reactions',
+        'Liver damage (with overdose)'
+      ],
+      precautions: [
+        'Use with caution in patients with liver disease',
+        'Avoid alcohol consumption',
+        'Do not exceed recommended dose',
+        'Consult doctor if symptoms persist'
+      ],
+      interactions: [
+        'Cholestyramine may reduce absorption',
+        'Warfarin interaction may increase bleeding risk',
+        'Alcohol may increase liver toxicity'
+      ],
+      storage: 'Store in a cool, dry place away from direct sunlight. Keep out of reach of children.'
+    }
+  };
+
+  const handleItemPress = (itemId: number) => {
+    if (onMedicineSelect && medicineData[itemId]) {
+      onMedicineSelect(medicineData[itemId]);
+    }
+  };
+
   return (
     <ScrollView style={[styles.content, isDarkMode && styles.darkContent]}>
       <Text style={[styles.title, isDarkMode && styles.darkTitle]}>{t('scanHistory')}</Text>
@@ -23,7 +116,11 @@ const HistoryContent = () => {
       
       <View style={styles.historyList}>
         {historyItems.map((item) => (
-          <View key={item.id} style={[styles.historyItem, isDarkMode && styles.darkHistoryItem]}>
+          <TouchableOpacity 
+            key={item.id} 
+            style={[styles.historyItem, isDarkMode && styles.darkHistoryItem]}
+            onPress={() => handleItemPress(item.id)}
+          >
             <View style={[styles.itemIcon, isDarkMode && styles.darkItemIcon]}>
               <Text style={styles.iconText}>💊</Text>
             </View>
@@ -31,7 +128,7 @@ const HistoryContent = () => {
               <Text style={[styles.itemName, isDarkMode && styles.darkItemName]}>{item.name}</Text>
               <Text style={[styles.itemDate, isDarkMode && styles.darkItemDate]}>{item.date} {t('at')} {item.time}</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
     </ScrollView>

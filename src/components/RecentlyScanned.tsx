@@ -15,7 +15,11 @@ interface MedicineItem {
   iconColorDark: string;
 }
 
-const RecentlyScanned: React.FC = () => {
+type RecentlyScannedProps = {
+  onMedicineSelect?: (medicineId: string) => void;
+};
+
+const RecentlyScanned: React.FC<RecentlyScannedProps> = ({ onMedicineSelect }) => {
   const { t } = useLanguage();
   const { isDarkMode } = useTheme();
   
@@ -143,8 +147,14 @@ const RecentlyScanned: React.FC = () => {
       toValue: 1,
       tension: 100,
       friction: 5,
-      useNativeDriver: true,
+        useNativeDriver: true,
     }).start();
+  };
+
+  const handleMedicinePress = (medicineId: string) => {
+    if (onMedicineSelect) {
+      onMedicineSelect(medicineId);
+    }
   };
 
   return (
@@ -182,6 +192,7 @@ const RecentlyScanned: React.FC = () => {
                 style={[styles.card, isDarkMode && styles.darkCard]}
                 onPressIn={() => handlePressIn(index)}
                 onPressOut={() => handlePressOut(index)}
+                onPress={() => handleMedicinePress(medicine.id)}
               >
                 <LinearGradient
                   colors={isDarkMode ? medicine.gradientDark : medicine.gradient}
@@ -227,6 +238,7 @@ const RecentlyScanned: React.FC = () => {
                 style={[styles.card, isDarkMode && styles.darkCard]}
                 onPressIn={() => handlePressIn(index + 2)}
                 onPressOut={() => handlePressOut(index + 2)}
+                onPress={() => handleMedicinePress(medicine.id)}
               >
                 <LinearGradient
                   colors={isDarkMode ? medicine.gradientDark : medicine.gradient}
@@ -272,6 +284,7 @@ const RecentlyScanned: React.FC = () => {
                 style={[styles.card, isDarkMode && styles.darkCard]}
                 onPressIn={() => handlePressIn(index + 4)}
                 onPressOut={() => handlePressOut(index + 4)}
+                onPress={() => handleMedicinePress(medicine.id)}
               >
                 <LinearGradient
                   colors={isDarkMode ? medicine.gradientDark : medicine.gradient}

@@ -108,6 +108,15 @@ const translations = {
     // Common translations
     ok: 'OK',
     back: 'Back',
+    medicineDetails: 'Medicine Details',
+    description: 'Description',
+    indications: 'Indications',
+    contraindications: 'Contraindications',
+    sideEffects: 'Side Effects',
+    precautions: 'Precautions',
+    drugInteractions: 'Drug Interactions',
+    storage: 'Storage Instructions',
+    dosage: 'Dosage',
     
     // Image upload translations
     permissionRequired: 'Permission Required',
@@ -315,6 +324,15 @@ const translations = {
     // Common translations
     ok: 'ঠিক আছে',
     back: 'ফিরে যান',
+    medicineDetails: 'ঔষধের বিস্তারিত',
+    description: 'বর্ণনা',
+    indications: 'ইঙ্গিত',
+    contraindications: 'বিরোধিতা',
+    sideEffects: 'পার্শ্বপ্রতিক্রিয়া',
+    precautions: 'সতর্কতা',
+    drugInteractions: 'ড্রাগ ইন্টারঅ্যাকশন',
+    storage: 'সংরক্ষণ নির্দেশাবলী',
+    dosage: 'ডোজ',
     
     // Image upload translations
     permissionRequired: 'অনুমতি প্রয়োজন',
@@ -451,5 +469,9 @@ export const useLanguage = (): LanguageContextType => {
   }
   return context;
 };
+
+
+
+
 
 

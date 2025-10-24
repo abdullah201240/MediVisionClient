@@ -12,11 +12,12 @@ import SettingsScreen from './SettingsScreen';
 import PrivacyPolicyScreen from './PrivacyPolicyScreen';
 import AboutScreen from './AboutScreen';
 import HelpSupportScreen from './HelpSupportScreen';
+import MedicineDetailsScreen from './MedicineDetailsScreen';
 import { useAlert } from '../context/AlertContext';
 import { useTheme } from '../context/ThemeContext';
 
 type NavigationMode = 'home' | 'scan' | 'history' | 'profile';
-type MainTabMode = NavigationMode | 'settings' | 'privacyPolicy' | 'about' | 'helpSupport';
+type MainTabMode = NavigationMode | 'settings' | 'privacyPolicy' | 'about' | 'helpSupport' | 'medicineDetails';
 
 type RootStackParamList = {
   Main: undefined;
@@ -26,8 +27,53 @@ type RootStackParamList = {
   LanguageSelection: undefined;
 };
 
+// Sample medicine data - in a real app, this would come from an API or database
+const sampleMedicine = {
+  id: '1',
+  name: 'Napa Extra',
+  genericName: 'Paracetamol + Caffeine',
+  manufacturer: 'Beximco Pharmaceuticals Ltd.',
+  dosage: '500mg + 65mg',
+  description: 'Napa Extra is a combination of Paracetamol and Caffeine. Paracetamol is an analgesic (painkiller) and antipyretic (fever reducer). Caffeine is added to enhance the pain-relieving effect of Paracetamol.',
+  indications: [
+    'Fever',
+    'Headache',
+    'Migraine',
+    'Toothache',
+    'Muscle pain',
+    'Joint pain',
+    'Menstrual pain'
+  ],
+  contraindications: [
+    'Hypersensitivity to paracetamol or caffeine',
+    'Severe hepatic impairment',
+    'Severe renal impairment',
+    'Glucose-6-phosphate dehydrogenase deficiency'
+  ],
+  sideEffects: [
+    'Nausea',
+    'Vomiting',
+    'Stomach pain',
+    'Allergic skin reactions',
+    'Liver damage (with overdose)'
+  ],
+  precautions: [
+    'Use with caution in patients with liver disease',
+    'Avoid alcohol consumption',
+    'Do not exceed recommended dose',
+    'Consult doctor if symptoms persist'
+  ],
+  interactions: [
+    'Cholestyramine may reduce absorption',
+    'Warfarin interaction may increase bleeding risk',
+    'Alcohol may increase liver toxicity'
+  ],
+  storage: 'Store in a cool, dry place away from direct sunlight. Keep out of reach of children.'
+};
+
 const MainTabsScreen = () => {
   const [activeTab, setActiveTab] = useState<MainTabMode>('home');
+  const [selectedMedicine, setSelectedMedicine] = useState<any>(sampleMedicine);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { showAlert } = useAlert();
   const { isDarkMode } = useTheme();
@@ -42,6 +88,11 @@ const MainTabsScreen = () => {
     setActiveTab('profile');
   };
 
+  const handleMedicineSelect = (medicine: any) => {
+    setSelectedMedicine(medicine);
+    setActiveTab('medicineDetails');
+  };
+
   const renderActiveScreen = () => {
     switch (activeTab) {
       case 'home':
@@ -54,11 +105,12 @@ const MainTabsScreen = () => {
             console.log('History button pressed in MainTabsScreen');
             setActiveTab('history');
           }} 
+          onMedicineSelect={handleMedicineSelect}
         />;
       case 'scan':
         return <ScanContent />;
       case 'history':
-        return <HistoryContent />;
+        return <HistoryContent onMedicineSelect={handleMedicineSelect} />;
       case 'profile':
         return <ProfileContent 
           onSettingsPress={() => setActiveTab('settings')} 
@@ -78,6 +130,11 @@ const MainTabsScreen = () => {
         return <AboutScreen onBackPress={() => setActiveTab('profile')} />;
       case 'helpSupport':
         return <HelpSupportScreen onBackPress={() => setActiveTab('profile')} />;
+      case 'medicineDetails':
+        return <MedicineDetailsScreen 
+          medicine={selectedMedicine} 
+          onBackPress={() => setActiveTab('history')} 
+        />;
       default:
         return <DashboardContent 
           onScanPress={() => {
@@ -88,6 +145,7 @@ const MainTabsScreen = () => {
             console.log('History button pressed in MainTabsScreen (default)');
             setActiveTab('history');
           }} 
+          onMedicineSelect={handleMedicineSelect}
         />;
     }
   };
@@ -100,7 +158,8 @@ const MainTabsScreen = () => {
 
   // Check if current tab should show back button
   const shouldShowBackButton = () => {
-    return activeTab === 'settings' || activeTab === 'privacyPolicy' || activeTab === 'about' || activeTab === 'helpSupport';
+    return activeTab === 'settings' || activeTab === 'privacyPolicy' || activeTab === 'about' || 
+           activeTab === 'helpSupport' || activeTab === 'medicineDetails';
   };
 
   return (
