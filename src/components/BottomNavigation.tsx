@@ -9,13 +9,15 @@ type NavigationMode = 'home' | 'scan' | 'history' | 'profile';
 type HorizontalNavigationProps = {
   activeTab: NavigationMode;
   onTabChange?: (tab: NavigationMode) => void;
+  isAdmin?: boolean; // New prop to indicate if user is admin
 };
 
 const { width } = Dimensions.get('window');
 
 const HorizontalNavigation: React.FC<HorizontalNavigationProps> = ({ 
   activeTab, 
-  onTabChange 
+  onTabChange,
+  isAdmin = false 
 }) => {
   const { t } = useLanguage();
   const { isDarkMode } = useTheme();
@@ -37,7 +39,7 @@ const HorizontalNavigation: React.FC<HorizontalNavigationProps> = ({
     { key: 'home', icon: { type: 'Ionicons', name: 'home' }, label: t('home') },
     { key: 'scan', icon: { type: 'MaterialIcons', name: 'qr-code-scanner' }, label: t('scan') },
     { key: 'history', icon: { type: 'FontAwesome5', name: 'history' }, label: t('history') },
-    { key: 'profile', icon: { type: 'Ionicons', name: 'person' }, label: t('profile') },
+    { key: 'profile', icon: { type: 'Ionicons', name: isAdmin ? 'shield' : 'person' }, label: isAdmin ? 'Admin' : t('profile') },
   ];
 
   useEffect(() => {

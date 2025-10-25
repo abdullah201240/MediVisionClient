@@ -25,9 +25,10 @@ type HeaderProps = {
   onSettingsPress?: () => void;
   onBackPress?: () => void; // New prop for back button
   showBackButton?: boolean; // New prop to control back button visibility
+  isAdmin?: boolean; // New prop to indicate if user is admin
 };
 
-const Header: React.FC<HeaderProps> = ({ userName, userEmail, onLogout, onUserInfoPress, onSettingsPress, onBackPress, showBackButton = false }) => {
+const Header: React.FC<HeaderProps> = ({ userName, userEmail, onLogout, onUserInfoPress, onSettingsPress, onBackPress, showBackButton = false, isAdmin = false }) => {
   const [isUserInfoPressed, setIsUserInfoPressed] = useState(false);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
@@ -37,40 +38,55 @@ const Header: React.FC<HeaderProps> = ({ userName, userEmail, onLogout, onUserIn
 
   const handleMenuPress = () => {
     // Show menu options
+    const baseActions: Array<{
+      text: string;
+      onPress: () => void;
+      style?: 'default' | 'cancel' | 'destructive';
+    }> = [
+      {
+        text: t('settings'),
+        onPress: () => {
+          console.log('Settings pressed');
+          if (onSettingsPress) {
+            onSettingsPress();
+          } else {
+            console.log('No onSettingsPress handler provided');
+          }
+        },
+      },
+      {
+        text: t('changeLanguage'),
+        onPress: () => {
+          // Toggle language directly
+          const newLanguage = language === 'en' ? 'bn' : 'en';
+          setLanguage(newLanguage);
+        },
+      },
+      {
+        text: t('helpSupport'),
+        onPress: () => console.log('Help pressed'),
+      },
+      {
+        text: t('cancel'),
+        onPress: () => {},
+        style: 'cancel',
+      },
+    ];
+
+    // Add admin-specific options if user is admin
+    const adminActions = isAdmin ? [
+      {
+        text: 'Admin Dashboard',
+        onPress: () => console.log('Admin Dashboard pressed'),
+      },
+      ...baseActions
+    ] : baseActions;
+
     showAlert({
       title: t('menuOptions'),
       message: t('selectAnOption'),
       type: 'info',
-      actions: [
-        {
-          text: t('settings'),
-          onPress: () => {
-            console.log('Settings pressed');
-            if (onSettingsPress) {
-              onSettingsPress();
-            } else {
-              console.log('No onSettingsPress handler provided');
-            }
-          },
-        },
-        {
-          text: t('changeLanguage'),
-          onPress: () => {
-            // Toggle language directly
-            const newLanguage = language === 'en' ? 'bn' : 'en';
-            setLanguage(newLanguage);
-          },
-        },
-        {
-          text: t('helpSupport'),
-          onPress: () => console.log('Help pressed'),
-        },
-        {
-          text: t('cancel'),
-          onPress: () => {},
-          style: 'cancel',
-        },
-      ]
+      actions: adminActions
     });
   };
 
