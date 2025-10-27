@@ -20,6 +20,9 @@ interface CustomAlertProps {
   }>;
 }
 
+// Define a type for gradient colors that satisfies LinearGradient requirements
+type GradientColors = readonly [string, string, ...string[]];
+
 const CustomAlert: React.FC<CustomAlertProps> = ({ 
   visible, 
   title, 
@@ -153,21 +156,21 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         return { 
           icon: 'checkmark-circle', 
           color: isDarkMode ? '#34d399' : '#10B981',
-          gradient: isDarkMode ? ['#34d399', '#10b981'] : ['#10B981', '#059669'],
+          gradient: [isDarkMode ? '#34d399' : '#10B981', isDarkMode ? '#10b981' : '#059669'] as GradientColors,
           backgroundColor: isDarkMode ? 'rgba(52, 211, 153, 0.15)' : 'rgba(16, 185, 129, 0.15)'
         };
       case 'error':
         return { 
           icon: 'close-circle', 
           color: isDarkMode ? '#f87171' : '#EF4444',
-          gradient: isDarkMode ? ['#f87171', '#ef4444'] : ['#EF4444', '#DC2626'],
+          gradient: [isDarkMode ? '#f87171' : '#EF4444', isDarkMode ? '#ef4444' : '#DC2626'] as GradientColors,
           backgroundColor: isDarkMode ? 'rgba(248, 113, 113, 0.15)' : 'rgba(239, 68, 68, 0.15)'
         };
       case 'warning':
         return { 
           icon: 'warning', 
           color: isDarkMode ? '#fbbf24' : '#F59E0B',
-          gradient: isDarkMode ? ['#fbbf24', '#f59e0b'] : ['#F59E0B', '#D97706'],
+          gradient: [isDarkMode ? '#fbbf24' : '#F59E0B', isDarkMode ? '#f59e0b' : '#D97706'] as GradientColors,
           backgroundColor: isDarkMode ? 'rgba(251, 191, 36, 0.15)' : 'rgba(245, 158, 11, 0.15)'
         };
       case 'info':
@@ -175,7 +178,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         return { 
           icon: 'information-circle', 
           color: isDarkMode ? '#60a5fa' : '#3B82F6',
-          gradient: isDarkMode ? ['#60a5fa', '#3b82f6'] : ['#3B82F6', '#2563EB'],
+          gradient: [isDarkMode ? '#60a5fa' : '#3B82F6', isDarkMode ? '#3b82f6' : '#2563EB'] as GradientColors,
           backgroundColor: isDarkMode ? 'rgba(96, 165, 250, 0.15)' : 'rgba(59, 130, 246, 0.15)'
         };
     }
@@ -259,9 +262,9 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                 }
               ]}
             >
-              <View style={[styles.decorativeCircle, styles.circle1, { backgroundColor: `${color}15` }]} />
-              <View style={[styles.decorativeCircle, styles.circle2, { backgroundColor: `${color}10` }]} />
-            </Animated.View>
+                <View style={[styles.decorativeCircle, styles.circle1, { backgroundColor: `${color}15` }]} />
+                <View style={[styles.decorativeCircle, styles.circle2, { backgroundColor: `${color}10` }]} />
+              </Animated.View>
             
             <Animated.View 
               style={[
@@ -325,7 +328,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                     <LinearGradient
                       colors={action.style === 'cancel' ? (isDarkMode ? ['#374151', '#1f2937'] : ['#F9FAFB', '#E5E7EB']) : 
                                action.style === 'destructive' ? (isDarkMode ? ['#7f1d1d', '#b91c1c'] : ['#b91c1c', '#dc2626']) : 
-                               gradient}
+                               [...gradient]}
                       style={[
                         styles.button,
                         action.style === 'destructive' && styles.destructiveButton,
@@ -367,7 +370,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                   }}
                 >
                   <LinearGradient
-                    colors={gradient}
+                    colors={[...gradient] as GradientColors}
                     style={styles.button}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
@@ -423,9 +426,9 @@ const styles = StyleSheet.create({
         shadowRadius: 30,
       },
       android: {
-        elevation: 20,
-      },
-    },
+        elevation: 20
+      }
+    }),
   },
   darkAlertContainer: {
     backgroundColor: 'rgba(30, 41, 59, 0.9)',
@@ -520,9 +523,9 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
       },
       android: {
-        elevation: 4,
-      },
-    },
+        elevation: 4
+      }
+    }),
   },
   buttonOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -544,9 +547,9 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
       },
       android: {
-        elevation: 1,
-      },
-    },
+        elevation: 1
+      }
+    }),
   },
   darkCancelButton: {
     backgroundColor: '#374151',
