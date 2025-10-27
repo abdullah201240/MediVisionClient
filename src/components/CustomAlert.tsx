@@ -153,31 +153,35 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         return { 
           icon: 'checkmark-circle', 
           color: isDarkMode ? '#34d399' : '#10B981',
-          gradient: isDarkMode ? ['#34d399', '#10b981'] : ['#10B981', '#059669']
+          gradient: isDarkMode ? ['#34d399', '#10b981'] : ['#10B981', '#059669'],
+          backgroundColor: isDarkMode ? 'rgba(52, 211, 153, 0.15)' : 'rgba(16, 185, 129, 0.15)'
         };
       case 'error':
         return { 
           icon: 'close-circle', 
           color: isDarkMode ? '#f87171' : '#EF4444',
-          gradient: isDarkMode ? ['#f87171', '#ef4444'] : ['#EF4444', '#DC2626']
+          gradient: isDarkMode ? ['#f87171', '#ef4444'] : ['#EF4444', '#DC2626'],
+          backgroundColor: isDarkMode ? 'rgba(248, 113, 113, 0.15)' : 'rgba(239, 68, 68, 0.15)'
         };
       case 'warning':
         return { 
           icon: 'warning', 
           color: isDarkMode ? '#fbbf24' : '#F59E0B',
-          gradient: isDarkMode ? ['#fbbf24', '#f59e0b'] : ['#F59E0B', '#D97706']
+          gradient: isDarkMode ? ['#fbbf24', '#f59e0b'] : ['#F59E0B', '#D97706'],
+          backgroundColor: isDarkMode ? 'rgba(251, 191, 36, 0.15)' : 'rgba(245, 158, 11, 0.15)'
         };
       case 'info':
       default:
         return { 
           icon: 'information-circle', 
           color: isDarkMode ? '#60a5fa' : '#3B82F6',
-          gradient: isDarkMode ? ['#60a5fa', '#3b82f6'] : ['#3B82F6', '#2563EB']
+          gradient: isDarkMode ? ['#60a5fa', '#3b82f6'] : ['#3B82F6', '#2563EB'],
+          backgroundColor: isDarkMode ? 'rgba(96, 165, 250, 0.15)' : 'rgba(59, 130, 246, 0.15)'
         };
     }
   };
 
-  const { icon, color, gradient } = getIconAndColor();
+  const { icon, color, gradient, backgroundColor } = getIconAndColor();
 
   const handleActionPress = (onPress?: () => void) => {
     Animated.parallel([
@@ -264,7 +268,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                 styles.iconContainer, 
                 isDarkMode && styles.darkIconContainer,
                 { 
-                  backgroundColor: `${color}15`,
+                  backgroundColor: backgroundColor,
                   borderColor: `${color}30`,
                   transform: [
                     { scale: iconScaleAnim },
@@ -319,7 +323,9 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                     }}
                   >
                     <LinearGradient
-                      colors={action.style === 'cancel' ? (isDarkMode ? ['#374151', '#1f2937'] : ['#F9FAFB', '#E5E7EB']) : (isDarkMode ? ['#0f4c3a', '#00835A'] : ['#00835A', '#006e4d'])}
+                      colors={action.style === 'cancel' ? (isDarkMode ? ['#374151', '#1f2937'] : ['#F9FAFB', '#E5E7EB']) : 
+                               action.style === 'destructive' ? (isDarkMode ? ['#7f1d1d', '#b91c1c'] : ['#b91c1c', '#dc2626']) : 
+                               gradient}
                       style={[
                         styles.button,
                         action.style === 'destructive' && styles.destructiveButton,
@@ -361,7 +367,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                   }}
                 >
                   <LinearGradient
-                    colors={isDarkMode ? ['#0f4c3a', '#00835A'] : ['#00835A', '#006e4d']}
+                    colors={gradient}
                     style={styles.button}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
@@ -419,7 +425,7 @@ const styles = StyleSheet.create({
       android: {
         elevation: 20,
       },
-    }),
+    },
   },
   darkAlertContainer: {
     backgroundColor: 'rgba(30, 41, 59, 0.9)',
@@ -516,7 +522,7 @@ const styles = StyleSheet.create({
       android: {
         elevation: 4,
       },
-    }),
+    },
   },
   buttonOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -540,7 +546,7 @@ const styles = StyleSheet.create({
       android: {
         elevation: 1,
       },
-    }),
+    },
   },
   darkCancelButton: {
     backgroundColor: '#374151',
