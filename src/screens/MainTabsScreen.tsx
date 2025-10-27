@@ -8,16 +8,19 @@ import DashboardContent from './DashboardScreen';
 import ScanContent from './ScanScreen';
 import HistoryContent from './HistoryScreen';
 import ProfileContent from './ProfileScreen';
+import AdminProfileScreen from './AdminProfileScreen';
 import SettingsScreen from './SettingsScreen';
 import PrivacyPolicyScreen from './PrivacyPolicyScreen';
 import AboutScreen from './AboutScreen';
 import HelpSupportScreen from './HelpSupportScreen';
 import MedicineDetailsScreen from './MedicineDetailsScreen';
+import UserManagementScreen from './UserManagementScreen';
+import MedicineManagementScreen from './MedicineManagementScreen';
 import { useAlert } from '../context/AlertContext';
 import { useTheme } from '../context/ThemeContext';
 
 type NavigationMode = 'home' | 'scan' | 'history' | 'profile';
-type MainTabMode = NavigationMode | 'settings' | 'privacyPolicy' | 'about' | 'helpSupport' | 'medicineDetails';
+type MainTabMode = NavigationMode | 'settings' | 'privacyPolicy' | 'about' | 'helpSupport' | 'medicineDetails' | 'adminProfile' | 'userManagement' | 'medicineManagement';
 
 type RootStackParamList = {
   Main: undefined;
@@ -73,6 +76,7 @@ const sampleMedicine = {
 
 const MainTabsScreen = () => {
   const [activeTab, setActiveTab] = useState<MainTabMode>('home');
+  const [isAdmin, setIsAdmin] = useState(true); // In a real app, this would come from user context or API
   const [selectedMedicine, setSelectedMedicine] = useState<any>(sampleMedicine);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { showAlert } = useAlert();
@@ -123,12 +127,26 @@ const MainTabsScreen = () => {
       case 'history':
         return <HistoryContent onMedicineSelect={handleMedicineSelect} />;
       case 'profile':
+        // Check if user is admin to show admin profile
         return <ProfileContent 
           onSettingsPress={() => setActiveTab('settings')} 
           onPrivacyPolicyPress={() => setActiveTab('privacyPolicy')} 
           onAboutPress={() => setActiveTab('about')} 
           onHelpSupportPress={() => setActiveTab('helpSupport')} 
         />;
+      case 'adminProfile':
+        return <AdminProfileScreen 
+          onSettingsPress={() => setActiveTab('settings')} 
+          onPrivacyPolicyPress={() => setActiveTab('privacyPolicy')} 
+          onAboutPress={() => setActiveTab('about')} 
+          onHelpSupportPress={() => setActiveTab('helpSupport')} 
+          onUserManagementPress={() => setActiveTab('userManagement')} 
+          onMedicineManagementPress={() => setActiveTab('medicineManagement')} 
+        />;
+      case 'userManagement':
+        return <UserManagementScreen onBackPress={() => setActiveTab('adminProfile')} />;
+      case 'medicineManagement':
+        return <MedicineManagementScreen onBackPress={() => setActiveTab('adminProfile')} />;
       case 'settings':
         return <SettingsScreen 
           onBackPress={() => setActiveTab('profile')} 
@@ -171,7 +189,8 @@ const MainTabsScreen = () => {
   // Check if current tab should show back button
   const shouldShowBackButton = () => {
     return activeTab === 'settings' || activeTab === 'privacyPolicy' || activeTab === 'about' || 
-           activeTab === 'helpSupport' || activeTab === 'medicineDetails';
+           activeTab === 'helpSupport' || activeTab === 'medicineDetails' || activeTab === 'userManagement' ||
+           activeTab === 'medicineManagement';
   };
 
   return (
@@ -183,7 +202,7 @@ const MainTabsScreen = () => {
         onLogout={handleLogout}
         onUserInfoPress={() => {
           console.log('User info pressed, navigating to profile');
-          setActiveTab('profile');
+          setActiveTab(isAdmin ? 'adminProfile' : 'profile');
         }}
         onSettingsPress={() => {
           console.log('Settings pressed, navigating to settings');
@@ -191,6 +210,7 @@ const MainTabsScreen = () => {
         }}
         showBackButton={shouldShowBackButton()}
         onBackPress={handleBackPress}
+        isAdmin={isAdmin}
       />
       <View style={styles.content}>
         {renderActiveScreen()}
@@ -198,6 +218,7 @@ const MainTabsScreen = () => {
       <BottomNavigation 
         activeTab={activeTab as NavigationMode} 
         onTabChange={(tab: NavigationMode) => setActiveTab(tab)} 
+        isAdmin={isAdmin}
       />
     </View>
   );
