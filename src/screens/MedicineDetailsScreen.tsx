@@ -10,10 +10,13 @@ type MedicineDetailsScreenProps = {
 };
 
 const MedicineDetailsScreen: React.FC<MedicineDetailsScreenProps> = ({ medicine, onBackPress }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { isDarkMode } = useTheme();
 
-  const renderSection = (title: string, content: string | string[]) => {
+  const renderSection = (title: string, englishContent: string | string[] | undefined, banglaContent: string | string[] | undefined) => {
+    // Select content based on language
+    const content = language === 'bn' ? banglaContent || englishContent : englishContent || banglaContent;
+    
     // Don't render section if there's no content
     if (!content || (Array.isArray(content) && content.length === 0)) {
       return null;
@@ -72,22 +75,22 @@ const MedicineDetailsScreen: React.FC<MedicineDetailsScreenProps> = ({ medicine,
 
         {/* Medicine Name and Basic Info */}
         <View style={[styles.infoContainer, isDarkMode && styles.darkInfoContainer]}>
-          <Text style={[styles.medicineName, isDarkMode && styles.darkMedicineName]}>{medicine.name}</Text>
-          {medicine.nameBn && (
+          <Text style={[styles.medicineName, isDarkMode && styles.darkMedicineName]}>
+            {language === 'bn' ? medicine.nameBn || medicine.name : medicine.name}
+          </Text>
+          {medicine.nameBn && language === 'en' && (
             <Text style={[styles.medicineNameBn, isDarkMode && styles.darkMedicineNameBn]}>{medicine.nameBn}</Text>
           )}
-          {medicine.brand && (
-            <Text style={[styles.manufacturer, isDarkMode && styles.darkManufacturer]}>{medicine.brand}</Text>
-          )}
-          {medicine.brandBn && (
+          <Text style={[styles.manufacturer, isDarkMode && styles.darkManufacturer]}>
+            {language === 'bn' ? medicine.brandBn || medicine.brand || '-' : medicine.brand || '-'}
+          </Text>
+          {medicine.brandBn && language === 'en' && medicine.brand && (
             <Text style={[styles.manufacturerBn, isDarkMode && styles.darkManufacturerBn]}>{medicine.brandBn}</Text>
           )}
-          {medicine.origin && (
-            <Text style={[styles.origin, isDarkMode && styles.darkOrigin]}>
-              {t('origin')}: {medicine.origin}
-            </Text>
-          )}
-          {medicine.originBn && (
+          <Text style={[styles.origin, isDarkMode && styles.darkOrigin]}>
+            {t('origin')}: {language === 'bn' ? medicine.originBn || medicine.origin || '-' : medicine.origin || '-'}
+          </Text>
+          {medicine.originBn && language === 'en' && medicine.origin && (
             <Text style={[styles.originBn, isDarkMode && styles.darkOriginBn]}>
               {medicine.originBn}
             </Text>
@@ -95,16 +98,16 @@ const MedicineDetailsScreen: React.FC<MedicineDetailsScreenProps> = ({ medicine,
         </View>
 
         {/* Details/Description */}
-        {renderSection(t('description'), medicine.details || medicine.detailsBn)}
+        {renderSection(t('description'), medicine.details, medicine.detailsBn)}
 
         {/* Side Effects */}
-        {renderSection(t('sideEffects'), medicine.sideEffects || medicine.sideEffectsBn)}
+        {renderSection(t('sideEffects'), medicine.sideEffects, medicine.sideEffectsBn)}
 
         {/* Usage */}
-        {renderSection(t('usage'), medicine.usage || medicine.usageBn)}
+        {renderSection(t('usage'), medicine.usage, medicine.usageBn)}
 
         {/* How to Use */}
-        {renderSection(t('howToUse'), medicine.howToUse || medicine.howToUseBn)}
+        {renderSection(t('howToUse'), medicine.howToUse, medicine.howToUseBn)}
 
         {/* No information message if no content */}
         {!medicine.details && !medicine.detailsBn && 

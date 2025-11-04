@@ -91,7 +91,7 @@ const ScanContent: React.FC<ScanContentProps> = ({ onMedicineScan }) => {
             onMedicineScan(response.data);
           }
         } else {
-          // No matching medicines found
+          // No matching medicines found - show a more user-friendly message
           showAlert({
             title: t('noMedicinesFound'),
             message: t('noMedicinesFoundMessage'),
