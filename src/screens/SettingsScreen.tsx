@@ -124,9 +124,6 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBackPress, onAboutPre
   const handleRateApp = async () => {
     // Try to open the app store rating page
     try {
-      // For iOS, use the App Store URL scheme
-      // For Android, use the Play Store URL
-      // TODO: Replace these with your actual app IDs
       const iosAppId = '1234567890'; // Replace with your iOS App Store ID
       const androidPackageName = 'com.yourcompany.medivision'; // Replace with your Android package name
       
@@ -300,30 +297,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBackPress, onAboutPre
           )
         )}
         
-        {/* Security Settings */}
-        {renderSection(t('security'), 
-          <>
-            {renderSettingItem(
-              'finger-print',
-              t('biometricAuth'),
-              t('useFingerprintFaceID'),
-              undefined,
-              <Switch
-                trackColor={{ false: isDarkMode ? '#4b5563' : '#767577', true: isDarkMode ? '#4ade80' : '#81b0ff' }}
-                thumbColor={biometricEnabled ? (isDarkMode ? '#4ade80' : '#00835A') : (isDarkMode ? '#94a3b8' : '#f4f3f4')}
-                ios_backgroundColor={isDarkMode ? "#374151" : "#3e3e3e"}
-                onValueChange={handleBiometricToggle}
-                value={biometricEnabled}
-              />
-            )}
-            {renderSettingItem(
-              'lock-closed',
-              t('changePassword'),
-              t('updateYourPassword'),
-              handleChangePassword
-            )}
-          </>
-        )}
+       
         
         {/* Account Settings */}
         {renderSection(t('account'), 
@@ -358,12 +332,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBackPress, onAboutPre
               t('aboutThisApp'),
               handleAbout
             )}
-            {renderSettingItem(
-              'star',
-              t('rateApp'),
-              t('rateThisApp'),
-              handleRateApp
-            )}
+            
           </>
         )}
         
