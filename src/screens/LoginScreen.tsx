@@ -1,10 +1,11 @@
 import React, { useState, useRef, RefObject } from 'react';
-import { View, Text, StyleSheet, Dimensions, Platform, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Platform, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '../context/LanguageContext';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { api } from '../lib/api';
 
 const { width, height } = Dimensions.get('window');
 
@@ -35,18 +36,30 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
     otpInputs.current = Array(4).fill(null).map(() => React.createRef<TextInput>()) as Array<RefObject<TextInput>>;
   }
 
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     if (!email) {
-      alert(t('enterEmail'));
+      Alert.alert(t('error'), t('enterEmail'));
       return;
     }
     
-    // Simulate sending OTP
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const response = await api.sendOtp(email);
+      
+      if (response.error) {
+        Alert.alert(t('error'), response.error);
+        setIsLoading(false);
+        return;
+      }
+      
       setShowOtpInput(true);
-    }, 1500);
+      setIsLoading(false);
+      Alert.alert(t('success'), t('otpSentSuccessfully'));
+    } catch (error) {
+      console.error('Send OTP error:', error);
+      Alert.alert(t('error'), t('failedToSendOtp') + ': ' + (error instanceof Error ? error.message : 'Unknown error'));
+      setIsLoading(false);
+    }
   };
 
   const handleOtpChange = (text: string, index: number) => {
@@ -71,19 +84,35 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
     }
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (otp.length !== 4) {
-      alert(t('enter4DigitOtp'));
+      Alert.alert(t('error'), t('enter4DigitOtp'));
       return;
     }
     
-    // Simulate login process
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await api.verifyOtp(email, otp);
+      
+      if (response.error) {
+        Alert.alert(t('error'), response.error);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Save the auth token
+      if (response.data?.access_token) {
+        await api.setAuthToken(response.data.access_token);
+      }
+      
       setIsLoading(false);
       // Navigate to main tabs screen
       navigation.navigate('MainTabs');
-    }, 1500);
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert(t('error'), t('failedToLogin') + ': ' + (error instanceof Error ? error.message : 'Unknown error'));
+      setIsLoading(false);
+    }
   };
 
   const handleBack = () => {

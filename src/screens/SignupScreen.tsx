@@ -1,10 +1,11 @@
 import React, { useState, useRef, RefObject } from 'react';
-import { View, Text, StyleSheet, Dimensions, Platform, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Platform, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '../context/LanguageContext';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { API_BASE_URL } from '@env';
+import { sendOtpForSignup, verifyOtpForSignup, api } from '../lib/api';
 
 const { width, height } = Dimensions.get('window');
 
@@ -35,18 +36,40 @@ const SignupScreen = ({ navigation }: SignupScreenProps) => {
     otpInputs.current = Array(4).fill(null).map(() => React.createRef<TextInput>()) as Array<RefObject<TextInput>>;
   }
 
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     if (!name || !email) {
-      alert(t('enterNameAndEmail'));
+      Alert.alert(t('error'), t('enterNameAndEmail'));
       return;
     }
     
-    // Simulate sending OTP
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      // Send OTP for signup
+      const response = await sendOtpForSignup(API_BASE_URL, {
+        name,
+        email,
+      });
+      
+      if (response.error) {
+        Alert.alert(t('error'), response.error);
+        return;
+      }
+      
+      // In development mode, the message will indicate to check logs for OTP
+      if (response.data?.message?.includes('check logs')) {
+        Alert.alert(
+          t('developmentMode'), 
+          t('otpInLogs'), 
+          [{ text: t('ok') }]
+        );
+      }
+      
       setShowOtpInput(true);
-    }, 1500);
+    } catch (error) {
+      Alert.alert(t('error'), t('failedToSendOtp'));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleOtpChange = (text: string, index: number) => {
@@ -71,19 +94,32 @@ const SignupScreen = ({ navigation }: SignupScreenProps) => {
     }
   };
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (otp.length !== 4) {
-      alert(t('enter4DigitOtp'));
+      Alert.alert(t('error'), t('enter4DigitOtp'));
       return;
     }
     
-    // Simulate signup process
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      // Verify OTP for signup
+      const response = await verifyOtpForSignup(API_BASE_URL || 'http://192.168.21.101:3000', email, otp);
+      
+      if (response.error) {
+        Alert.alert(t('error'), response.error);
+        return;
+      }
+      
+      if (response.data) {
+        // Save token and navigate to main tabs
+        await api.setAuthToken(response.data.access_token);
+        navigation.navigate('MainTabs');
+      }
+    } catch (error) {
+      Alert.alert(t('error'), t('failedToVerifyOtp'));
+    } finally {
       setIsLoading(false);
-      // Navigate to main tabs screen
-      navigation.navigate('MainTabs');
-    }, 1500);
+    }
   };
 
   const handleBack = () => {

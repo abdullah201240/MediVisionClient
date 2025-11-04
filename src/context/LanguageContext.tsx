@@ -104,6 +104,9 @@ const translations = {
     sending: 'Sending...',
     sendOtp: 'Send OTP',
     enterOtpSent: 'Enter the OTP code sent to your email',
+    otpSentSuccessfully: 'OTP sent successfully to your email',
+    failedToSendOtp: 'Failed to send OTP. Please try again.',
+    failedToLogin: 'Failed to login. Please try again.',
     
     // Common translations
     ok: 'OK',
@@ -320,6 +323,9 @@ const translations = {
     sending: 'পাঠানো হচ্ছে...',
     sendOtp: 'OTP পাঠান',
     enterOtpSent: 'আপনার ইমেইলে পাঠানো OTP কোড লিখুন',
+    otpSentSuccessfully: 'OTP সফলভাবে আপনার ইমেইলে পাঠানো হয়েছে',
+    failedToSendOtp: 'OTP পাঠাতে ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।',
+    failedToLogin: 'লগইন করতে ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।',
     
     // Common translations
     ok: 'ঠিক আছে',
