@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, Platform, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Dimensions, Platform, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -11,6 +11,7 @@ import SignupScreen from './src/screens/SignupScreen';
 import MainTabsScreen from './src/screens/MainTabsScreen';
 import Footer from './src/components/footer';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { api } from './src/lib/api';
 
 const { width, height } = Dimensions.get('window');
 
@@ -126,6 +127,41 @@ const LanguageSelectionScreen = () => {
 
 const AppWithProviders = () => {
   const { isLanguageSelected } = useLanguage();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // null means checking, false means not logged in, true means logged in
+  const [loading, setLoading] = useState(true);
+
+  const checkAuthStatus = async () => {
+    try {
+      // Check if user is already logged in by trying to fetch profile
+      const response = await api.getProfile();
+      if (response.data) {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+      }
+    } catch (error) {
+      setIsLoggedIn(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isLanguageSelected) {
+      checkAuthStatus();
+    } else {
+      setLoading(false);
+    }
+  }, [isLanguageSelected]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4ade80" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <NavigationContainer>
@@ -156,6 +192,17 @@ const App = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#0a2f24',
+  },
+  loadingText: {
+    color: 'white',
+    marginTop: 10,
+    fontSize: 16,
   },
   content: {
     flex: 1,

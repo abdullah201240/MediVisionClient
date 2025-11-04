@@ -253,7 +253,7 @@ const RecentlyScanned: React.FC<RecentlyScannedProps> = ({ onMedicineSelect }) =
         <View style={styles.row}>
           {itemsToShow.slice(0, 2).map((medicine, index) => (
             <Animated.View
-              key={medicine.id}
+              key={`${medicine.id}-${index}`}
               style={[
                 styles.itemContainer,
                 {
@@ -309,7 +309,7 @@ const RecentlyScanned: React.FC<RecentlyScannedProps> = ({ onMedicineSelect }) =
         <View style={styles.row}>
           {itemsToShow.slice(2, 4).map((medicine, index) => (
             <Animated.View
-              key={medicine.id}
+              key={`${medicine.id}-${index + 2}`}
               style={[
                 styles.itemContainer,
                 {
@@ -365,7 +365,7 @@ const RecentlyScanned: React.FC<RecentlyScannedProps> = ({ onMedicineSelect }) =
         <View style={styles.row}>
           {itemsToShow.slice(4, 6).map((medicine, index) => (
             <Animated.View
-              key={medicine.id}
+              key={`${medicine.id}-${index + 4}`}
               style={[
                 styles.itemContainer,
                 {

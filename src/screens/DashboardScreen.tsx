@@ -1,10 +1,9 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Animated, Easing, Platform } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Animated, Easing, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useLanguage } from '../context/LanguageContext';
 import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
 import RecentlyScanned from '../components/RecentlyScanned';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -33,6 +32,15 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ onScanPress, onHist
   const { t } = useLanguage();
   const { isDarkMode } = useTheme();
   const { showAlert } = useAlert();
+  
+  // Add state for search term and suggestions
+  const [searchTerm, setSearchTerm] = useState('');
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  
+  // Add debounce timer ref
+  const searchTimer = useRef<NodeJS.Timeout | null>(null);
   
   // Animation refs
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -116,6 +124,101 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ onScanPress, onHist
       ])
     ).start();
   }, []);
+
+  // Handle text search with debounce
+  const handleTextSearch = async (text: string) => {
+    setSearchTerm(text);
+    
+    // Clear previous timer
+    if (searchTimer.current) {
+      clearTimeout(searchTimer.current);
+    }
+    
+    // If text is empty, hide suggestions
+    if (!text.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    
+    // Set timer for debounced search
+    searchTimer.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        console.log('Performing search for:', text.trim()); // Debug log
+        const response = await api.searchMedicines(text.trim());
+        console.log('Search response:', response); // Debug log
+        
+        if (response.data && response.data.length > 0) {
+          // Show only top 5 suggestions
+          setSuggestions(response.data.slice(0, 5));
+          setShowSuggestions(true);
+        } else {
+          setSuggestions([]);
+          setShowSuggestions(false);
+        }
+      } catch (error) {
+        console.error('Error searching medicines:', error);
+        setSuggestions([]);
+        setShowSuggestions(false);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300); // 300ms debounce
+  };
+
+  // Handle suggestion selection
+  const handleSuggestionSelect = (medicine: any) => {
+    setSearchTerm(medicine.name);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    
+    // Pass the selected medicine to the callback
+    if (onMedicineUpload) {
+      onMedicineUpload([medicine]);
+    }
+  };
+
+  // Handle search submission
+  const handleSearchSubmit = () => {
+    if (searchTerm.trim()) {
+      // Hide suggestions
+      setShowSuggestions(false);
+      
+      // Perform full search
+      performFullSearch(searchTerm.trim());
+    }
+  };
+
+  // Perform full search
+  const performFullSearch = async (term: string) => {
+    try {
+      console.log('Performing full search for:', term); // Debug log
+      const response = await api.searchMedicines(term);
+      console.log('Full search response:', response); // Debug log
+      
+      if (response.error) {
+        showAlert({
+          title: t('error'),
+          message: response.error,
+          type: 'error'
+        });
+        return;
+      }
+      
+      // Always pass the data to the callback, even if it's an empty array
+      if (onMedicineUpload) {
+        onMedicineUpload(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error searching medicines:', error);
+      showAlert({
+        title: t('error'),
+        message: t('failedToSearchMedicine'),
+        type: 'error'
+      });
+    }
+  };
 
   const handleUploadImages = async () => {
     // Request permission to access media library
@@ -222,8 +325,53 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ onScanPress, onHist
             style={[styles.searchInput, isDarkMode && styles.darkSearchInput]}
             placeholder={t('searchMedicine')}
             placeholderTextColor={isDarkMode ? "#aaa" : "#999"}
+            value={searchTerm}
+            onChangeText={handleTextSearch}
+            onSubmitEditing={handleSearchSubmit}
+            returnKeyType="search"
+            onFocus={() => searchTerm && setShowSuggestions(true)}
+            onBlur={() => {
+              // Delay hiding suggestions to allow for clicks
+              setTimeout(() => setShowSuggestions(false), 150);
+            }}
           />
+          {isSearching && (
+            <ActivityIndicator 
+              size="small" 
+              color={isDarkMode ? "#4ade80" : "#1a7f5e"} 
+              style={styles.searchIndicator} 
+            />
+          )}
         </BlurView>
+        
+        {/* Suggestions Dropdown */}
+        {showSuggestions && suggestions.length > 0 && (
+          <View style={[styles.suggestionsContainer, isDarkMode && styles.darkSuggestionsContainer]}>
+            {suggestions.map((medicine, index) => (
+              <TouchableOpacity
+                key={medicine.id}
+                style={[styles.suggestionItem, isDarkMode && styles.darkSuggestionItem]}
+                onPress={() => handleSuggestionSelect(medicine)}
+              >
+                <View style={styles.suggestionContent}>
+                  <Text style={[styles.suggestionName, isDarkMode && styles.darkSuggestionName]}>
+                    {medicine.name}
+                  </Text>
+                  {medicine.brand && (
+                    <Text style={[styles.suggestionBrand, isDarkMode && styles.darkSuggestionBrand]}>
+                      {medicine.brand}
+                    </Text>
+                  )}
+                </View>
+                <Ionicons 
+                  name="chevron-forward" 
+                  size={18} 
+                  color={isDarkMode ? "#94a3b8" : "#94a3b8"} 
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </Animated.View>
 
       {/* Quick Actions */}
@@ -520,6 +668,66 @@ const styles = StyleSheet.create({
     color: '#718096',
   },
   darkSecondaryCardSubtitle: {
+    color: '#94a3b8',
+  },
+  // Search suggestions styles
+  searchIndicator: {
+    marginLeft: 8,
+  },
+  suggestionsContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(247, 250, 252, 0.95)',
+    borderRadius: 12,
+    marginTop: 4,
+    zIndex: 100,
+    maxHeight: 200,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  darkSuggestionsContainer: {
+    backgroundColor: 'rgba(30, 41, 59, 0.95)',
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(26, 127, 94, 0.1)',
+  },
+  darkSuggestionItem: {
+    borderBottomColor: 'rgba(74, 222, 128, 0.1)',
+  },
+  suggestionContent: {
+    flex: 1,
+  },
+  suggestionName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#2d3748',
+    marginBottom: 2,
+  },
+  darkSuggestionName: {
+    color: '#e2e8f0',
+  },
+  suggestionBrand: {
+    fontSize: 14,
+    color: '#718096',
+  },
+  darkSuggestionBrand: {
     color: '#94a3b8',
   },
 });

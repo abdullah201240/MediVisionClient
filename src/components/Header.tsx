@@ -101,11 +101,31 @@ const Header: React.FC<HeaderProps> = ({ userName, userEmail, onLogout, onUserIn
 
   const handleLogoutPress = () => {
     if (onLogout) {
-      onLogout();
+      // Show confirmation dialog
+      showAlert({
+        title: t('logout'),
+        message: t('areYouSureLogout'),
+        type: 'warning',
+        actions: [
+          {
+            text: t('cancel'),
+            onPress: () => {},
+            style: 'cancel',
+          },
+          {
+            text: t('logout'),
+            style: 'destructive',
+            onPress: () => {
+              // Call the onLogout prop function
+              onLogout();
+            },
+          },
+        ]
+      });
       return;
     }
     
-    // Show confirmation dialog
+    // Fallback if no onLogout prop is provided
     showAlert({
       title: t('logout'),
       message: t('areYouSureLogout'),

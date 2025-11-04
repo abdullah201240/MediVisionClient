@@ -90,6 +90,27 @@ const MainTabsScreen = () => {
   const { showAlert } = useAlert();
   const { isDarkMode } = useTheme();
 
+  // Check authentication status when component mounts
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const response = await api.getProfile();
+        if (!response.data) {
+          // User is not authenticated, redirect to login
+          navigation.navigate('Login');
+          return;
+        }
+        // User is authenticated, continue with normal flow
+      } catch (error) {
+        // Error checking auth status, redirect to login
+        navigation.navigate('Login');
+        return;
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
+
   // Fetch user profile data
   useEffect(() => {
     const fetchProfile = async () => {
@@ -119,9 +140,15 @@ const MainTabsScreen = () => {
   }, [activeTab]);
 
   const handleLogout = () => {
-    // Clear auth token and navigate back to the main screen
+    // Clear auth token
     api.clearAuthToken();
-    navigation.navigate('Main');
+    // Reset the user info
+    setUserInfo({
+      name: 'User',
+      email: 'user@example.com'
+    });
+    // Navigate to login screen
+    navigation.navigate('Login');
   };
 
   const handleBackPress = () => {
@@ -143,11 +170,10 @@ const MainTabsScreen = () => {
   const handleMedicineUpload = (medicineData: any) => {
     // Check if medicineData is an array (multiple results) - same as scan feature
     if (Array.isArray(medicineData)) {
-      if (medicineData.length > 0) {
-        // Always show search results screen for consistency with scan feature
-        setScannedMedicines(medicineData);
-        setActiveTab('medicineSearchResults');
-      }
+      // Always show search results screen for consistency with scan feature
+      // Even if the array is empty, we still want to show the results screen
+      setScannedMedicines(medicineData);
+      setActiveTab('medicineSearchResults');
     } else {
       // Single medicine object - show medicine details
       setSelectedMedicine(medicineData);

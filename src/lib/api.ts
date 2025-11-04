@@ -288,6 +288,56 @@ class ApiClient {
     }
   }
 
+  async searchMedicines(searchTerm: string): Promise<ApiResponse<any[]>> {
+    try {
+      const token = await AsyncStorage.getItem('access_token');
+      
+      console.log('Search token:', token); // Debug log
+      
+      // Let's try without authentication for now to see if that's the issue
+      const response = await fetch(`${this.baseUrl}/medicines?search=${encodeURIComponent(searchTerm)}`, {
+        method: 'GET',
+        headers: token ? {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        } : {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      console.log('Search response status:', response.status); // Debug log
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('Search error response:', errorText); // Debug log
+        let errorMessage = 'Failed to search medicines';
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          // If parsing fails, use the raw text or default message
+          errorMessage = errorText || errorMessage;
+        }
+        
+        return {
+          error: errorMessage,
+        };
+      }
+      
+      const result = await response.json();
+      console.log('Search response data:', result); // Debug log
+      // Extract the data array from the paginated response
+      const data = result.data || result; // Handle both paginated and non-paginated responses
+      return { data };
+    } catch (error) {
+      console.error('Medicine search error:', error);
+      return {
+        error: 'Network error - please check your connection and ensure the server is running',
+      };
+    }
+  }
+
   async searchMedicineByImage(imageUri: string): Promise<ApiResponse<any[]>> {
     try {
       const token = await AsyncStorage.getItem('access_token');

@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, Platform, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Dimensions, Platform, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '../context/LanguageContext';
 import Footer from '../components/footer';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { api } from '../lib/api';
 
 const { width, height } = Dimensions.get('window');
 
@@ -22,6 +23,32 @@ interface MainScreenProps {
 
 const MainScreen = ({ navigation }: MainScreenProps) => {
   const { t, language, setIsLanguageSelected, setLanguage } = useLanguage();
+  const [loading, setLoading] = useState(true);
+  const [checkingAuth, setCheckingAuth] = useState(false);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    setCheckingAuth(true);
+    try {
+      // Check if user is already logged in by trying to fetch profile
+      const response = await api.getProfile();
+      if (response.data) {
+        // User is logged in, navigate to main tabs
+        navigation.navigate('MainTabs');
+      }
+      // If not logged in, stay on this screen and don't auto-navigate
+    } catch (error) {
+      // If there's an error, stay on this screen
+      // Don't navigate anywhere, just stay on the main screen
+      console.log('User not logged in, staying on main screen');
+    } finally {
+      setCheckingAuth(false);
+      setLoading(false);
+    }
+  };
 
   const handleBackToLanguageSelection = () => {
     setIsLanguageSelected(false);
@@ -44,9 +71,25 @@ const MainScreen = ({ navigation }: MainScreenProps) => {
   };
 
   const handleContinue = () => {
-    // Navigate to main tabs screen
-    navigation.navigate('MainTabs');
+    // Navigate to login screen instead of main tabs for non-logged-in users
+    navigation.navigate('Login');
   };
+
+  if (loading || checkingAuth) {
+    return (
+      <LinearGradient
+        colors={['#0a2f24', '#0D3B2E', '#1a5e48', '#0D3B2E', '#0a2f24']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.container}
+      >
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4ade80" />
+          <Text style={styles.loadingText}>{t('checkingAuth')}</Text>
+        </View>
+      </LinearGradient>
+    );
+  }
 
   return (
     <LinearGradient
@@ -131,24 +174,6 @@ const MainScreen = ({ navigation }: MainScreenProps) => {
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
-            
-            {/* Continue button to go directly to main tabs */}
-            <TouchableOpacity 
-              style={styles.continueButton}
-              onPress={handleContinue}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={['#00b374', '#00835a']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.buttonGradient}
-              >
-                <Text style={styles.continueButtonText}>
-                  {t('continue')}
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -165,6 +190,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 50,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: 'white',
+    marginTop: 10,
+    fontSize: 16,
   },
   scrollContent: {
     flexGrow: 1,
