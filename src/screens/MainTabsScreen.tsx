@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -18,6 +18,7 @@ import UserManagementScreen from './UserManagementScreen';
 import MedicineManagementScreen from './MedicineManagementScreen';
 import { useAlert } from '../context/AlertContext';
 import { useTheme } from '../context/ThemeContext';
+import { api } from '../lib/api';
 
 type NavigationMode = 'home' | 'scan' | 'history' | 'profile';
 type MainTabMode = NavigationMode | 'settings' | 'privacyPolicy' | 'about' | 'helpSupport' | 'medicineDetails' | 'adminProfile' | 'userManagement' | 'medicineManagement';
@@ -76,14 +77,42 @@ const sampleMedicine = {
 
 const MainTabsScreen = () => {
   const [activeTab, setActiveTab] = useState<MainTabMode>('home');
-  const [isAdmin, setIsAdmin] = useState(true); // In a real app, this would come from user context or API
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userInfo, setUserInfo] = useState({
+    name: 'User',
+    email: 'user@example.com'
+  });
   const [selectedMedicine, setSelectedMedicine] = useState<any>(sampleMedicine);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { showAlert } = useAlert();
   const { isDarkMode } = useTheme();
 
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await api.getProfile();
+        
+        if (response.data) {
+          setUserInfo({
+            name: response.data.name || 'User',
+            email: response.data.email || 'user@example.com'
+          });
+          
+          // Check if user is admin
+          setIsAdmin(response.data.role === 'admin');
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+      }
+    };
+    
+    fetchProfile();
+  }, []);
+
   const handleLogout = () => {
-    // Navigate back to the main screen
+    // Clear auth token and navigate back to the main screen
+    api.clearAuthToken();
     navigation.navigate('Main');
   };
 
@@ -128,12 +157,23 @@ const MainTabsScreen = () => {
         return <HistoryContent onMedicineSelect={handleMedicineSelect} />;
       case 'profile':
         // Check if user is admin to show admin profile
-        return <ProfileContent 
-          onSettingsPress={() => setActiveTab('settings')} 
-          onPrivacyPolicyPress={() => setActiveTab('privacyPolicy')} 
-          onAboutPress={() => setActiveTab('about')} 
-          onHelpSupportPress={() => setActiveTab('helpSupport')} 
-        />;
+        return isAdmin ? (
+          <AdminProfileScreen 
+            onSettingsPress={() => setActiveTab('settings')} 
+            onPrivacyPolicyPress={() => setActiveTab('privacyPolicy')} 
+            onAboutPress={() => setActiveTab('about')} 
+            onHelpSupportPress={() => setActiveTab('helpSupport')} 
+            onUserManagementPress={() => setActiveTab('userManagement')} 
+            onMedicineManagementPress={() => setActiveTab('medicineManagement')} 
+          />
+        ) : (
+          <ProfileContent 
+            onSettingsPress={() => setActiveTab('settings')} 
+            onPrivacyPolicyPress={() => setActiveTab('privacyPolicy')} 
+            onAboutPress={() => setActiveTab('about')} 
+            onHelpSupportPress={() => setActiveTab('helpSupport')} 
+          />
+        );
       case 'adminProfile':
         return <AdminProfileScreen 
           onSettingsPress={() => setActiveTab('settings')} 
@@ -149,16 +189,16 @@ const MainTabsScreen = () => {
         return <MedicineManagementScreen onBackPress={() => setActiveTab('adminProfile')} />;
       case 'settings':
         return <SettingsScreen 
-          onBackPress={() => setActiveTab('profile')} 
+          onBackPress={() => setActiveTab(isAdmin ? 'adminProfile' : 'profile')} 
           onAboutPress={() => setActiveTab('about')}
           onHelpSupportPress={() => setActiveTab('helpSupport')}
         />;
       case 'privacyPolicy':
-        return <PrivacyPolicyScreen onBackPress={() => setActiveTab('profile')} />;
+        return <PrivacyPolicyScreen onBackPress={() => setActiveTab(isAdmin ? 'adminProfile' : 'profile')} />;
       case 'about':
-        return <AboutScreen onBackPress={() => setActiveTab('profile')} />;
+        return <AboutScreen onBackPress={() => setActiveTab(isAdmin ? 'adminProfile' : 'profile')} />;
       case 'helpSupport':
-        return <HelpSupportScreen onBackPress={() => setActiveTab('profile')} />;
+        return <HelpSupportScreen onBackPress={() => setActiveTab(isAdmin ? 'adminProfile' : 'profile')} />;
       case 'medicineDetails':
         return <MedicineDetailsScreen 
           medicine={selectedMedicine} 
@@ -197,8 +237,8 @@ const MainTabsScreen = () => {
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={isDarkMode ? '#1a1a1a' : '#fff'} />
       <Header 
-        userName="Muhtadi Ridwan"
-        userEmail="muhtadiiridwan5@gmail.com"
+        userName={userInfo.name}
+        userEmail={userInfo.email}
         onLogout={handleLogout}
         onUserInfoPress={() => {
           console.log('User info pressed, navigating to profile');

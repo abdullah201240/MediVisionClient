@@ -14,7 +14,6 @@ type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
   MainTabs: undefined;
-  LanguageSelection: undefined;
 };
 
 type HeaderProps = {
@@ -77,7 +76,11 @@ const Header: React.FC<HeaderProps> = ({ userName, userEmail, onLogout, onUserIn
     const adminActions = isAdmin ? [
       {
         text: 'Admin Dashboard',
-        onPress: () => console.log('Admin Dashboard pressed'),
+        onPress: () => {
+          if (onUserInfoPress) {
+            onUserInfoPress();
+          }
+        },
       },
       ...baseActions
     ] : baseActions;
@@ -146,8 +149,8 @@ const Header: React.FC<HeaderProps> = ({ userName, userEmail, onLogout, onUserIn
         onPressIn={() => setIsUserInfoPressed(true)}
         onPressOut={() => setIsUserInfoPressed(false)}
       >
-        <Text style={[styles.userName, isDarkMode && styles.darkUserName]}>{userName}</Text>
-        <Text style={[styles.userEmail, isDarkMode && styles.darkUserEmail]}>{userEmail}</Text>
+        <Text style={[styles.userName, isDarkMode && styles.darkUserName]} numberOfLines={1}>{userName}</Text>
+        <Text style={[styles.userEmail, isDarkMode && styles.darkUserEmail]} numberOfLines={1}>{userEmail}</Text>
       </TouchableOpacity>
       
       <View style={styles.headerActions}>
@@ -206,6 +209,8 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
     backgroundColor: 'transparent',
+    flex: 1,
+    marginHorizontal: 8,
   },
   userInfoPressed: {
     backgroundColor: 'rgba(0, 131, 90, 0.1)',
@@ -217,6 +222,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#2d3748',
+    maxWidth: 150,
   },
   darkUserName: {
     color: '#e2e8f0',
@@ -224,6 +230,7 @@ const styles = StyleSheet.create({
   userEmail: {
     fontSize: 12,
     color: '#718096',
+    maxWidth: 150,
   },
   darkUserEmail: {
     color: '#94a3b8',

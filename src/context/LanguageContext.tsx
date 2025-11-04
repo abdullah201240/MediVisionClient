@@ -231,6 +231,28 @@ const translations = {
     feedbackPlaceholder: 'How can we improve your experience?',
     submitFeedback: 'Submit Feedback',
     feedbackSuccess: 'Thank you for your feedback!',
+    // Add missing translations for profile image functionality
+    profileImage: 'Profile Image',
+    chooseOption: 'Choose an option',
+    camera: 'Camera',
+    gallery: 'Gallery',
+    permissionDenied: 'Permission Denied',
+    profileCameraPermissionRequired: 'Camera permission is required to take profile pictures',
+    profileGalleryPermissionRequired: 'Gallery permission is required to select profile pictures',
+    failedToPickImage: 'Failed to pick image',
+    profileImageUpdated: 'Profile image updated successfully',
+    profileImageRemoved: 'Profile image removed successfully',
+    failedToUploadImage: 'Failed to upload image',
+    failedToRemoveImage: 'Failed to remove image',
+    loading: 'Loading...',
+    retry: 'Retry',
+    selectGender: 'Select Gender',
+    male: 'Male',
+    female: 'Female',
+    other: 'Other',
+    preferNotToSay: 'Prefer not to say',
+    selectDate: 'Select Date',
+    notProvided: 'Not provided',
   },
   bn: {
     welcome: 'মেডিভিশনে স্বাগতম',
@@ -450,15 +472,41 @@ const translations = {
     feedbackPlaceholder: 'আপনি কিভাবে আপনার অভিজ্ঞতা উন্নত করতে পারেন?',
     submitFeedback: 'প্রতিক্রিয়া জমা দিন',
     feedbackSuccess: 'আপনার প্রতিক্রিয়ার জন্য ধন্যবাদ!',
+    // Add missing translations for profile image functionality
+    profileImage: 'প্রোফাইল ছবি',
+    chooseOption: 'একটি অপশন নির্বাচন করুন',
+    camera: 'ক্যামেরা',
+    gallery: 'গ্যালারি',
+    permissionDenied: 'অনুমতি অস্বীকৃত',
+    profileCameraPermissionRequired: 'প্রোফাইল ছবি তোলার জন্য ক্যামেরা অনুমতি প্রয়োজন',
+    profileGalleryPermissionRequired: 'প্রোফাইল ছবি নির্বাচন করার জন্য গ্যালারি অনুমতি প্রয়োজন',
+    failedToPickImage: 'ছবি নির্বাচন করতে ব্যর্থ হয়েছে',
+    profileImageUpdated: 'প্রোফাইল ছবি সফলভাবে আপডেট হয়েছে',
+    profileImageRemoved: 'প্রোফাইল ছবি সফলভাবে সরানো হয়েছে',
+    failedToUploadImage: 'ছবি আপলোড করতে ব্যর্থ হয়েছে',
+    failedToRemoveImage: 'ছবি সরাতে ব্যর্থ হয়েছে',
+    loading: 'লোড হচ্ছে...',
+    retry: 'পুনরায় চেষ্টা করুন',
+    selectGender: 'লিঙ্গ নির্বাচন করুন',
+    male: 'পুরুষ',
+    female: 'মহিলা',
+    other: 'অন্যান্য',
+    preferNotToSay: 'বলতে চাই না',
+    selectDate: 'তারিখ নির্বাচন করুন',
+    notProvided: 'প্রদান করা হয়নি',
   }
 };
+
+// Define the translation keys type to include all possible keys
+type TranslationKeys = keyof typeof translations.en;
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('en');
   const [isLanguageSelected, setIsLanguageSelected] = useState<boolean>(false);
 
   const t = (key: string): string => {
-    return translations[language][key as keyof typeof translations.en] || key;
+    const typedKey = key as TranslationKeys;
+    return translations[language][typedKey] || key;
   };
 
   return (
@@ -475,6 +523,10 @@ export const useLanguage = (): LanguageContextType => {
   }
   return context;
 };
+
+
+
+
 
 
 
