@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndi
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
+import { api } from '../lib/api';
 
 type MedicineSearchResultsScreenProps = {
   medicines: any[];
@@ -18,6 +19,7 @@ const MedicineSearchResultsScreen: React.FC<MedicineSearchResultsScreenProps> = 
   const { t } = useLanguage();
   const { isDarkMode } = useTheme();
   const [loading, setLoading] = useState(false);
+  const baseUrl = api.getBaseUrl();
 
   const handleMedicinePress = async (medicine: any) => {
     setLoading(true);
@@ -41,7 +43,7 @@ const MedicineSearchResultsScreen: React.FC<MedicineSearchResultsScreenProps> = 
       <View style={styles.medicineImageContainer}>
         {item.images && item.images.length > 0 ? (
           <Image 
-            source={{ uri: `http://192.168.21.101:3000/uploads/medicines/${item.images[0]}` }}
+            source={{ uri: `${baseUrl}/uploads/medicines/${item.images[0]}` }}
             style={styles.medicineImage}
           />
         ) : (

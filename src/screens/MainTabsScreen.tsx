@@ -141,8 +141,18 @@ const MainTabsScreen = () => {
   };
 
   const handleMedicineUpload = (medicineData: any) => {
-    setSelectedMedicine(medicineData);
-    setActiveTab('medicineDetails');
+    // Check if medicineData is an array (multiple results) - same as scan feature
+    if (Array.isArray(medicineData)) {
+      if (medicineData.length > 0) {
+        // Always show search results screen for consistency with scan feature
+        setScannedMedicines(medicineData);
+        setActiveTab('medicineSearchResults');
+      }
+    } else {
+      // Single medicine object - show medicine details
+      setSelectedMedicine(medicineData);
+      setActiveTab('medicineDetails');
+    }
   };
 
   const handleMedicineSelectFromResults = (medicine: any) => {
@@ -218,18 +228,18 @@ const MainTabsScreen = () => {
         return <MedicineSearchResultsScreen 
           medicines={scannedMedicines} 
           onMedicineSelect={handleMedicineSelectFromResults}
-          onBackPress={() => setActiveTab('scan')} 
+          onBackPress={() => setActiveTab('home')} 
         />;
       case 'medicineDetails':
         return <MedicineDetailsScreen 
           medicine={selectedMedicine} 
           onBackPress={() => {
             // If we came from search results, go back to search results
-            // Otherwise go back to scan
+            // Otherwise go back to home
             if (previousTab === 'medicineSearchResults' && scannedMedicines.length > 0) {
               setActiveTab('medicineSearchResults');
             } else {
-              setActiveTab('scan');
+              setActiveTab('home');
             }
           }} 
         />;

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
+import { api } from '../lib/api';
 
 type MedicineDetailsScreenProps = {
   medicine: any; // Updated to accept any medicine object from backend
@@ -12,6 +13,7 @@ type MedicineDetailsScreenProps = {
 const MedicineDetailsScreen: React.FC<MedicineDetailsScreenProps> = ({ medicine, onBackPress }) => {
   const { t, language } = useLanguage();
   const { isDarkMode } = useTheme();
+  const baseUrl = api.getBaseUrl();
 
   const renderSection = (title: string, englishContent: string | string[] | undefined, banglaContent: string | string[] | undefined) => {
     // Select content based on language
@@ -62,7 +64,7 @@ const MedicineDetailsScreen: React.FC<MedicineDetailsScreenProps> = ({ medicine,
         <View style={[styles.imageContainer, isDarkMode && styles.darkImageContainer]}>
           {medicine.images && medicine.images.length > 0 ? (
             <Image 
-              source={{ uri: `http://192.168.21.101:3000/uploads/medicines/${medicine.images[0]}` }}
+              source={{ uri: `${baseUrl}/uploads/medicines/${medicine.images[0]}` }}
               style={styles.medicineImage} 
               resizeMode="contain" 
             />

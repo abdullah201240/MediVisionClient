@@ -9,6 +9,8 @@ import RecentlyScanned from '../components/RecentlyScanned';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useTheme } from '../context/ThemeContext';
+import { api } from '../lib/api';
+import { useAlert } from '../context/AlertContext';
 
 // Define the props type
 type DashboardContentProps = {
@@ -30,6 +32,7 @@ type RootStackParamList = {
 const DashboardContent: React.FC<DashboardContentProps> = ({ onScanPress, onHistoryPress, onMedicineSelect, onMedicineUpload }) => {
   const { t } = useLanguage();
   const { isDarkMode } = useTheme();
+  const { showAlert } = useAlert();
   
   // Animation refs
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -45,45 +48,6 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ onScanPress, onHist
 
   // Fallback navigation if props are not provided
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-
-  // Sample medicine data for uploaded images
-  const sampleMedicineData = {
-    id: '3',
-    name: 'Vitamin C',
-    genericName: 'Ascorbic Acid',
-    manufacturer: 'HealthPlus Pharmaceuticals',
-    dosage: '500mg',
-    description: 'Vitamin C (ascorbic acid) is a water-soluble vitamin that helps maintain healthy skin, blood vessels, bones, and cartilage. It acts as an antioxidant, protecting cells from damage caused by free radicals.',
-    indications: [
-      'Dietary supplement for vitamin C deficiency',
-      'Immune system support',
-      'Collagen synthesis',
-      'Antioxidant protection'
-    ],
-    contraindications: [
-      'Hypersensitivity to ascorbic acid',
-      'History of kidney stones',
-      'Severe renal impairment'
-    ],
-    sideEffects: [
-      'Nausea',
-      'Diarrhea',
-      'Stomach cramps',
-      'Headache',
-      'Kidney stones (with high doses)'
-    ],
-    precautions: [
-      'Use with caution in patients with kidney disease',
-      'Avoid high doses during pregnancy',
-      'May interact with certain medications'
-    ],
-    interactions: [
-      'Aspirin may decrease vitamin C absorption',
-      'Estrogen may increase vitamin C levels',
-      'Warfarin effectiveness may be reduced'
-    ],
-    storage: 'Store in a cool, dry place away from direct sunlight. Keep container tightly closed.'
-  };
 
   useEffect(() => {
     // Entrance animation sequence
@@ -175,16 +139,46 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ onScanPress, onHist
 
     if (!result.canceled) {
       console.log('Selected images:', result.assets);
-      Alert.alert(
-        t('imagesSelected'),
-        `${result.assets.length} ${t('imagesSelectedMessage')}`,
-        [{ text: t('ok') }]
-      );
       
-      // Navigate to medicine details page with sample data
-      // In a real app, you would process the image and get actual medicine data
-      if (onMedicineUpload) {
-        onMedicineUpload(sampleMedicineData);
+      // Process the first selected image
+      if (result.assets.length > 0) {
+        try {
+          // Show loading state
+          Alert.alert(t('loading'), t('loading'));
+          
+          // Search for medicine by the first image
+          const response = await api.searchMedicineByImage(result.assets[0].uri);
+          
+          if (response.error) {
+            showAlert({
+              title: t('error'),
+              message: response.error,
+              type: 'error'
+            });
+            return;
+          }
+          
+          if (response.data && response.data.length > 0) {
+            // If we found matching medicines, pass them to the callback
+            if (onMedicineUpload) {
+              onMedicineUpload(response.data); // Pass all results, not just the first one
+            }
+          } else {
+            // No matching medicines found - show a more user-friendly message
+            showAlert({
+              title: t('noMedicinesFound'),
+              message: t('noMedicinesFoundMessage'),
+              type: 'info'
+            });
+          }
+        } catch (error) {
+          console.error('Error searching medicine by image:', error);
+          showAlert({
+            title: t('error'),
+            message: t('failedToSearchMedicine'),
+            type: 'error'
+          });
+        }
       }
     }
   };
