@@ -18,6 +18,32 @@ export interface User {
   image?: string;
 }
 
+export interface SearchResultDto {
+  id: string;
+  name: string;
+  nameBn?: string;
+  brand?: string;
+  brandBn?: string;
+  similarity?: number;
+  confidence?: string;
+  images?: string[];
+  matched_image?: string;
+  [key: string]: any; // Allow additional properties
+}
+
+export interface UserHistory {
+  id: string;
+  actionType: 'scan' | 'upload' | 'view';
+  imageData: string;
+  resultData: SearchResultDto[] | null;
+  isSuccessful: boolean;
+  errorMessage: string;
+  userId: string;
+  medicineId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface UpdateProfileData {
   name?: string;
   phone?: string;
@@ -363,6 +389,11 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  }
+
+  async getUserHistory(limit?: number): Promise<ApiResponse<UserHistory[]>> {
+    const endpoint = limit ? `/users/profile/history?limit=${limit}` : '/users/profile/history';
+    return this.request<UserHistory[]>(endpoint);
   }
 }
 

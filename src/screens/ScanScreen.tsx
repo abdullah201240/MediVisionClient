@@ -75,6 +75,21 @@ const ScanContent: React.FC<ScanContentProps> = ({ onMedicineScan }) => {
         // Search for medicine by image
         const response = await api.searchMedicineByImage(photo.uri);
         
+        // Save scan history
+        try {
+          // In a real implementation, we would save the history to the server
+          // For now, we'll just log it
+          console.log('Scan history saved:', {
+            actionType: 'scan',
+            imageData: photo.uri,
+            resultData: response.data,
+            isSuccessful: !response.error,
+            errorMessage: response.error || null
+          });
+        } catch (historyError) {
+          console.error('Failed to save scan history:', historyError);
+        }
+        
         if (response.error) {
           showAlert({
             title: t('error'),

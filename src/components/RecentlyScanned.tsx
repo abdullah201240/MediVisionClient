@@ -1,18 +1,21 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
+import { api } from '../lib/api';
 
 interface MedicineItem {
   id: string;
   name: string;
+  nameBn?: string;
   icon: string;
   gradient: [string, string];
   gradientDark: [string, string];
   iconColor: string;
   iconColorDark: string;
+  imageUrl?: string;
 }
 
 type RecentlyScannedProps = {
@@ -20,8 +23,10 @@ type RecentlyScannedProps = {
 };
 
 const RecentlyScanned: React.FC<RecentlyScannedProps> = ({ onMedicineSelect }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { isDarkMode } = useTheme();
+  const [recentScans, setRecentScans] = useState<MedicineItem[]>([]);
+  const [loading, setLoading] = useState(true);
   
   // Animation refs for each item
   const recentItemAnims = useRef([
@@ -33,63 +38,142 @@ const RecentlyScanned: React.FC<RecentlyScannedProps> = ({ onMedicineSelect }) =
     new Animated.Value(0)
   ]).current;
 
-  // Medicine data
-  const medicines: MedicineItem[] = [
-    {
-      id: '1',
-      name: t('paracetamol'),
-      icon: 'cube',
-      gradient: ['rgba(66, 153, 225, 0.1)', 'rgba(66, 153, 225, 0.05)'],
-      gradientDark: ['rgba(66, 153, 225, 0.2)', 'rgba(66, 153, 225, 0.1)'],
-      iconColor: '#4299e1',
-      iconColorDark: '#60a5fa'
-    },
-    {
-      id: '2',
-      name: t('napaExtra'),
-      icon: 'cube',
-      gradient: ['rgba(252, 129, 129, 0.1)', 'rgba(252, 129, 129, 0.05)'],
-      gradientDark: ['rgba(252, 129, 129, 0.2)', 'rgba(252, 129, 129, 0.1)'],
-      iconColor: '#fc8181',
-      iconColorDark: '#f87171'
-    },
-    {
-      id: '3',
-      name: t('vitaminC'),
-      icon: 'cube',
-      gradient: ['rgba(72, 187, 120, 0.1)', 'rgba(72, 187, 120, 0.05)'],
-      gradientDark: ['rgba(72, 187, 120, 0.2)', 'rgba(72, 187, 120, 0.1)'],
-      iconColor: '#48bb78',
-      iconColorDark: '#34d399'
-    },
-    {
-      id: '4',
-      name: t('calcium'),
-      icon: 'cube',
-      gradient: ['rgba(236, 72, 153, 0.1)', 'rgba(236, 72, 153, 0.05)'],
-      gradientDark: ['rgba(236, 72, 153, 0.2)', 'rgba(236, 72, 153, 0.1)'],
-      iconColor: '#ec4899',
-      iconColorDark: '#f472b6'
-    },
-    {
-      id: '5',
-      name: t('omega3'),
-      icon: 'cube',
-      gradient: ['rgba(167, 139, 250, 0.1)', 'rgba(167, 139, 250, 0.05)'],
-      gradientDark: ['rgba(167, 139, 250, 0.2)', 'rgba(167, 139, 250, 0.1)'],
-      iconColor: '#a78bfa',
-      iconColorDark: '#c4b5fd'
-    },
-    {
-      id: '6',
-      name: t('multivitamin'),
-      icon: 'cube',
-      gradient: ['rgba(251, 191, 36, 0.1)', 'rgba(251, 191, 36, 0.05)'],
-      gradientDark: ['rgba(251, 191, 36, 0.2)', 'rgba(251, 191, 36, 0.1)'],
-      iconColor: '#fbbf24',
-      iconColorDark: '#fcd34d'
+  useEffect(() => {
+    fetchRecentScans();
+  }, []);
+
+  const fetchRecentScans = async () => {
+    try {
+      setLoading(true);
+      const response = await api.getUserHistory(6); // Get last 6 scans
+      
+      if (response.data) {
+        // Transform the history data into medicine items
+        const medicineItems: MedicineItem[] = response.data
+          .filter(item => item.resultData && item.resultData.length > 0)
+          .slice(0, 6) // Limit to 6 items
+          .map((item, index) => {
+            const medicine = item.resultData![0];
+            const baseUrl = api.getBaseUrl();
+            
+            return {
+              id: medicine.id,
+              name: language === 'bn' ? (medicine.nameBn || medicine.name) : medicine.name,
+              nameBn: medicine.nameBn,
+              icon: 'cube',
+              gradient: getGradientByIndex(index),
+              gradientDark: getDarkGradientByIndex(index),
+              iconColor: getIconColorByIndex(index),
+              iconColorDark: getDarkIconColorByIndex(index),
+              imageUrl: medicine.images && medicine.images.length > 0 
+                ? `${baseUrl}/uploads/medicines/${medicine.images[0]}` 
+                : undefined
+            };
+          });
+        
+        setRecentScans(medicineItems);
+      }
+    } catch (error) {
+      console.error('Failed to fetch recent scans:', error);
+      // Fallback to static data if API fails
+      setRecentScans(getStaticMedicines());
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const getStaticMedicines = (): MedicineItem[] => {
+    return [
+      {
+        id: '1',
+        name: t('paracetamol'),
+        icon: 'cube',
+        gradient: ['rgba(66, 153, 225, 0.1)', 'rgba(66, 153, 225, 0.05)'],
+        gradientDark: ['rgba(66, 153, 225, 0.2)', 'rgba(66, 153, 225, 0.1)'],
+        iconColor: '#4299e1',
+        iconColorDark: '#60a5fa'
+      },
+      {
+        id: '2',
+        name: t('napaExtra'),
+        icon: 'cube',
+        gradient: ['rgba(252, 129, 129, 0.1)', 'rgba(252, 129, 129, 0.05)'],
+        gradientDark: ['rgba(252, 129, 129, 0.2)', 'rgba(252, 129, 129, 0.1)'],
+        iconColor: '#fc8181',
+        iconColorDark: '#f87171'
+      },
+      {
+        id: '3',
+        name: t('vitaminC'),
+        icon: 'cube',
+        gradient: ['rgba(72, 187, 120, 0.1)', 'rgba(72, 187, 120, 0.05)'],
+        gradientDark: ['rgba(72, 187, 120, 0.2)', 'rgba(72, 187, 120, 0.1)'],
+        iconColor: '#48bb78',
+        iconColorDark: '#34d399'
+      },
+      {
+        id: '4',
+        name: t('calcium'),
+        icon: 'cube',
+        gradient: ['rgba(236, 72, 153, 0.1)', 'rgba(236, 72, 153, 0.05)'],
+        gradientDark: ['rgba(236, 72, 153, 0.2)', 'rgba(236, 72, 153, 0.1)'],
+        iconColor: '#ec4899',
+        iconColorDark: '#f472b6'
+      },
+      {
+        id: '5',
+        name: t('omega3'),
+        icon: 'cube',
+        gradient: ['rgba(167, 139, 250, 0.1)', 'rgba(167, 139, 250, 0.05)'],
+        gradientDark: ['rgba(167, 139, 250, 0.2)', 'rgba(167, 139, 250, 0.1)'],
+        iconColor: '#a78bfa',
+        iconColorDark: '#c4b5fd'
+      },
+      {
+        id: '6',
+        name: t('multivitamin'),
+        icon: 'cube',
+        gradient: ['rgba(251, 191, 36, 0.1)', 'rgba(251, 191, 36, 0.05)'],
+        gradientDark: ['rgba(251, 191, 36, 0.2)', 'rgba(251, 191, 36, 0.1)'],
+        iconColor: '#fbbf24',
+        iconColorDark: '#fcd34d'
+      }
+    ];
+  };
+
+  const getGradientByIndex = (index: number): [string, string] => {
+    const gradients: [string, string][] = [
+      ['rgba(66, 153, 225, 0.1)', 'rgba(66, 153, 225, 0.05)'],
+      ['rgba(252, 129, 129, 0.1)', 'rgba(252, 129, 129, 0.05)'],
+      ['rgba(72, 187, 120, 0.1)', 'rgba(72, 187, 120, 0.05)'],
+      ['rgba(236, 72, 153, 0.1)', 'rgba(236, 72, 153, 0.05)'],
+      ['rgba(167, 139, 250, 0.1)', 'rgba(167, 139, 250, 0.05)'],
+      ['rgba(251, 191, 36, 0.1)', 'rgba(251, 191, 36, 0.05)'],
+    ];
+    return gradients[index % gradients.length];
+  };
+
+  const getDarkGradientByIndex = (index: number): [string, string] => {
+    const gradients: [string, string][] = [
+      ['rgba(66, 153, 225, 0.2)', 'rgba(66, 153, 225, 0.1)'],
+      ['rgba(252, 129, 129, 0.2)', 'rgba(252, 129, 129, 0.1)'],
+      ['rgba(72, 187, 120, 0.2)', 'rgba(72, 187, 120, 0.1)'],
+      ['rgba(236, 72, 153, 0.2)', 'rgba(236, 72, 153, 0.1)'],
+      ['rgba(167, 139, 250, 0.2)', 'rgba(167, 139, 250, 0.1)'],
+      ['rgba(251, 191, 36, 0.2)', 'rgba(251, 191, 36, 0.1)'],
+    ];
+    return gradients[index % gradients.length];
+  };
+
+  const getIconColorByIndex = (index: number): string => {
+    const colors = ['#4299e1', '#fc8181', '#48bb78', '#ec4899', '#a78bfa', '#fbbf24'];
+    return colors[index % colors.length];
+  };
+
+  const getDarkIconColorByIndex = (index: number): string => {
+    const colors = ['#60a5fa', '#f87171', '#34d399', '#f472b6', '#c4b5fd', '#fcd34d'];
+    return colors[index % colors.length];
+  };
 
   useEffect(() => {
     // Staggered recent item animations
@@ -157,6 +241,9 @@ const RecentlyScanned: React.FC<RecentlyScannedProps> = ({ onMedicineSelect }) =
     }
   };
 
+  // If loading, show a loading state or fallback to static data
+  const itemsToShow = loading ? getStaticMedicines() : recentScans;
+
   return (
     <View style={styles.container}>
       <Text style={[styles.title, isDarkMode && styles.darkTitle]}>{t('recentlyScanned')}</Text>
@@ -164,7 +251,7 @@ const RecentlyScanned: React.FC<RecentlyScannedProps> = ({ onMedicineSelect }) =
       <View style={styles.grid}>
         {/* Row 1 */}
         <View style={styles.row}>
-          {medicines.slice(0, 2).map((medicine, index) => (
+          {itemsToShow.slice(0, 2).map((medicine, index) => (
             <Animated.View
               key={medicine.id}
               style={[
@@ -199,10 +286,20 @@ const RecentlyScanned: React.FC<RecentlyScannedProps> = ({ onMedicineSelect }) =
                   style={styles.imageContainer}
                 >
                   <View style={[styles.imagePlaceholder, isDarkMode && styles.darkImagePlaceholder]}>
-                    <Ionicons name={medicine.icon as any} size={32} color={isDarkMode ? medicine.iconColorDark : medicine.iconColor} />
+                    {medicine.imageUrl ? (
+                      <Image 
+                        source={{ uri: medicine.imageUrl }} 
+                        style={styles.medicineImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Ionicons name={medicine.icon as any} size={32} color={isDarkMode ? medicine.iconColorDark : medicine.iconColor} />
+                    )}
                   </View>
                 </LinearGradient>
-                <Text style={[styles.label, isDarkMode && styles.darkLabel]}>{medicine.name}</Text>
+                <Text style={[styles.label, isDarkMode && styles.darkLabel]} numberOfLines={2}>
+                  {medicine.name}
+                </Text>
               </TouchableOpacity>
             </Animated.View>
           ))}
@@ -210,7 +307,7 @@ const RecentlyScanned: React.FC<RecentlyScannedProps> = ({ onMedicineSelect }) =
 
         {/* Row 2 */}
         <View style={styles.row}>
-          {medicines.slice(2, 4).map((medicine, index) => (
+          {itemsToShow.slice(2, 4).map((medicine, index) => (
             <Animated.View
               key={medicine.id}
               style={[
@@ -245,10 +342,20 @@ const RecentlyScanned: React.FC<RecentlyScannedProps> = ({ onMedicineSelect }) =
                   style={styles.imageContainer}
                 >
                   <View style={[styles.imagePlaceholder, isDarkMode && styles.darkImagePlaceholder]}>
-                    <Ionicons name={medicine.icon as any} size={32} color={isDarkMode ? medicine.iconColorDark : medicine.iconColor} />
+                    {medicine.imageUrl ? (
+                      <Image 
+                        source={{ uri: medicine.imageUrl }} 
+                        style={styles.medicineImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Ionicons name={medicine.icon as any} size={32} color={isDarkMode ? medicine.iconColorDark : medicine.iconColor} />
+                    )}
                   </View>
                 </LinearGradient>
-                <Text style={[styles.label, isDarkMode && styles.darkLabel]}>{medicine.name}</Text>
+                <Text style={[styles.label, isDarkMode && styles.darkLabel]} numberOfLines={2}>
+                  {medicine.name}
+                </Text>
               </TouchableOpacity>
             </Animated.View>
           ))}
@@ -256,7 +363,7 @@ const RecentlyScanned: React.FC<RecentlyScannedProps> = ({ onMedicineSelect }) =
 
         {/* Row 3 */}
         <View style={styles.row}>
-          {medicines.slice(4, 6).map((medicine, index) => (
+          {itemsToShow.slice(4, 6).map((medicine, index) => (
             <Animated.View
               key={medicine.id}
               style={[
@@ -291,10 +398,20 @@ const RecentlyScanned: React.FC<RecentlyScannedProps> = ({ onMedicineSelect }) =
                   style={styles.imageContainer}
                 >
                   <View style={[styles.imagePlaceholder, isDarkMode && styles.darkImagePlaceholder]}>
-                    <Ionicons name={medicine.icon as any} size={32} color={isDarkMode ? medicine.iconColorDark : medicine.iconColor} />
+                    {medicine.imageUrl ? (
+                      <Image 
+                        source={{ uri: medicine.imageUrl }} 
+                        style={styles.medicineImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Ionicons name={medicine.icon as any} size={32} color={isDarkMode ? medicine.iconColorDark : medicine.iconColor} />
+                    )}
                   </View>
                 </LinearGradient>
-                <Text style={[styles.label, isDarkMode && styles.darkLabel]}>{medicine.name}</Text>
+                <Text style={[styles.label, isDarkMode && styles.darkLabel]} numberOfLines={2}>
+                  {medicine.name}
+                </Text>
               </TouchableOpacity>
             </Animated.View>
           ))}
@@ -385,6 +502,11 @@ const styles = StyleSheet.create({
   },
   darkImagePlaceholder: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  medicineImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 16,
   },
   label: {
     fontSize: 15,

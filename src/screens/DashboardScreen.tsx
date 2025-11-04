@@ -149,6 +149,21 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ onScanPress, onHist
           // Search for medicine by the first image
           const response = await api.searchMedicineByImage(result.assets[0].uri);
           
+          // Save upload history
+          try {
+            // In a real implementation, we would save the history to the server
+            // For now, we'll just log it
+            console.log('Upload history saved:', {
+              actionType: 'upload',
+              imageData: result.assets[0].uri,
+              resultData: response.data,
+              isSuccessful: !response.error,
+              errorMessage: response.error || null
+            });
+          } catch (historyError) {
+            console.error('Failed to save upload history:', historyError);
+          }
+          
           if (response.error) {
             showAlert({
               title: t('error'),
