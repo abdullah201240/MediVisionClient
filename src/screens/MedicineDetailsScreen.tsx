@@ -5,21 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 
 type MedicineDetailsScreenProps = {
-  medicine: {
-    id: string;
-    name: string;
-    genericName: string;
-    manufacturer: string;
-    dosage: string;
-    description: string;
-    indications: string[];
-    contraindications: string[];
-    sideEffects: string[];
-    precautions: string[];
-    interactions: string[];
-    storage: string;
-    imageUrl?: string;
-  };
+  medicine: any; // Updated to accept any medicine object from backend
   onBackPress: () => void;
 };
 
@@ -27,34 +13,56 @@ const MedicineDetailsScreen: React.FC<MedicineDetailsScreenProps> = ({ medicine,
   const { t } = useLanguage();
   const { isDarkMode } = useTheme();
 
-  const renderSection = (title: string, content: string | string[]) => (
-    <View style={[styles.section, isDarkMode && styles.darkSection]}>
-      <Text style={[styles.sectionTitle, isDarkMode && styles.darkSectionTitle]}>{title}</Text>
-      {Array.isArray(content) ? (
-        content.map((item, index) => (
-          <View key={index} style={styles.listItem}>
-            <Ionicons 
-              name="ellipse" 
-              size={8} 
-              color={isDarkMode ? "#4ade80" : "#00835A"} 
-              style={styles.bullet} 
-            />
-            <Text style={[styles.sectionText, isDarkMode && styles.darkSectionText]}>{item}</Text>
-          </View>
-        ))
-      ) : (
-        <Text style={[styles.sectionText, isDarkMode && styles.darkSectionText]}>{content}</Text>
-      )}
-    </View>
-  );
+  const renderSection = (title: string, content: string | string[]) => {
+    // Don't render section if there's no content
+    if (!content || (Array.isArray(content) && content.length === 0)) {
+      return null;
+    }
+    
+    return (
+      <View style={[styles.section, isDarkMode && styles.darkSection]}>
+        <Text style={[styles.sectionTitle, isDarkMode && styles.darkSectionTitle]}>{title}</Text>
+        {Array.isArray(content) ? (
+          content.map((item, index) => (
+            <View key={index} style={styles.listItem}>
+              <Ionicons 
+                name="ellipse" 
+                size={8} 
+                color={isDarkMode ? "#4ade80" : "#00835A"} 
+                style={styles.bullet} 
+              />
+              <Text style={[styles.sectionText, isDarkMode && styles.darkSectionText]}>{item}</Text>
+            </View>
+          ))
+        ) : (
+          <Text style={[styles.sectionText, isDarkMode && styles.darkSectionText]}>{content}</Text>
+        )}
+      </View>
+    );
+  };
 
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+      {/* Header */}
+      <View style={[styles.header, isDarkMode && styles.darkHeader]}>
+        <TouchableOpacity onPress={onBackPress} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={isDarkMode ? "#4ade80" : "#00835A"} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, isDarkMode && styles.darkHeaderTitle]} numberOfLines={1}>
+          {t('medicineDetails')}
+        </Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Medicine Image */}
         <View style={[styles.imageContainer, isDarkMode && styles.darkImageContainer]}>
-          {medicine.imageUrl ? (
-            <Image source={{ uri: medicine.imageUrl }} style={styles.medicineImage} resizeMode="contain" />
+          {medicine.images && medicine.images.length > 0 ? (
+            <Image 
+              source={{ uri: `http://192.168.21.101:3000/uploads/medicines/${medicine.images[0]}` }}
+              style={styles.medicineImage} 
+              resizeMode="contain" 
+            />
           ) : (
             <View style={[styles.imagePlaceholder, isDarkMode && styles.darkImagePlaceholder]}>
               <Ionicons name="cube" size={64} color={isDarkMode ? "#4ade80" : "#00835A"} />
@@ -65,31 +73,50 @@ const MedicineDetailsScreen: React.FC<MedicineDetailsScreenProps> = ({ medicine,
         {/* Medicine Name and Basic Info */}
         <View style={[styles.infoContainer, isDarkMode && styles.darkInfoContainer]}>
           <Text style={[styles.medicineName, isDarkMode && styles.darkMedicineName]}>{medicine.name}</Text>
-          <Text style={[styles.genericName, isDarkMode && styles.darkGenericName]}>{medicine.genericName}</Text>
-          <Text style={[styles.manufacturer, isDarkMode && styles.darkManufacturer]}>{medicine.manufacturer}</Text>
-          <Text style={[styles.dosage, isDarkMode && styles.darkDosage]}>{t('dosage')}: {medicine.dosage}</Text>
+          {medicine.nameBn && (
+            <Text style={[styles.medicineNameBn, isDarkMode && styles.darkMedicineNameBn]}>{medicine.nameBn}</Text>
+          )}
+          {medicine.brand && (
+            <Text style={[styles.manufacturer, isDarkMode && styles.darkManufacturer]}>{medicine.brand}</Text>
+          )}
+          {medicine.brandBn && (
+            <Text style={[styles.manufacturerBn, isDarkMode && styles.darkManufacturerBn]}>{medicine.brandBn}</Text>
+          )}
+          {medicine.origin && (
+            <Text style={[styles.origin, isDarkMode && styles.darkOrigin]}>
+              {t('origin')}: {medicine.origin}
+            </Text>
+          )}
+          {medicine.originBn && (
+            <Text style={[styles.originBn, isDarkMode && styles.darkOriginBn]}>
+              {medicine.originBn}
+            </Text>
+          )}
         </View>
 
-        {/* Description */}
-        {renderSection(t('description'), medicine.description)}
-
-        {/* Indications */}
-        {renderSection(t('indications'), medicine.indications)}
-
-        {/* Contraindications */}
-        {renderSection(t('contraindications'), medicine.contraindications)}
+        {/* Details/Description */}
+        {renderSection(t('description'), medicine.details || medicine.detailsBn)}
 
         {/* Side Effects */}
-        {renderSection(t('sideEffects'), medicine.sideEffects)}
+        {renderSection(t('sideEffects'), medicine.sideEffects || medicine.sideEffectsBn)}
 
-        {/* Precautions */}
-        {renderSection(t('precautions'), medicine.precautions)}
+        {/* Usage */}
+        {renderSection(t('usage'), medicine.usage || medicine.usageBn)}
 
-        {/* Drug Interactions */}
-        {renderSection(t('drugInteractions'), medicine.interactions)}
+        {/* How to Use */}
+        {renderSection(t('howToUse'), medicine.howToUse || medicine.howToUseBn)}
 
-        {/* Storage Instructions */}
-        {renderSection(t('storage'), medicine.storage)}
+        {/* No information message if no content */}
+        {!medicine.details && !medicine.detailsBn && 
+         !medicine.sideEffects && !medicine.sideEffectsBn &&
+         !medicine.usage && !medicine.usageBn &&
+         !medicine.howToUse && !medicine.howToUseBn && (
+          <View style={[styles.section, isDarkMode && styles.darkSection]}>
+            <Text style={[styles.sectionText, isDarkMode && styles.darkSectionText, styles.noInfoText]}>
+              {t('noDetailedInformation')}
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -103,10 +130,38 @@ const styles = StyleSheet.create({
   darkContainer: {
     backgroundColor: '#1a1a1a',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#edf2f7',
+    backgroundColor: '#fff',
+  },
+  darkHeader: {
+    backgroundColor: '#1a1a1a',
+    borderBottomColor: '#334155',
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1e293b',
+  },
+  darkHeaderTitle: {
+    color: '#f1f5f9',
+  },
+  headerSpacer: {
+    width: 40, // Same width as back button for alignment
+  },
   content: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 16, // Add padding at the top since we removed the header
+    paddingTop: 16,
   },
   imageContainer: {
     alignItems: 'center',
@@ -146,34 +201,49 @@ const styles = StyleSheet.create({
   medicineName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1e293b', // Darker color for better visibility in light mode
+    color: '#1e293b',
     marginBottom: 4,
   },
   darkMedicineName: {
-    color: '#f1f5f9', // Lighter color for dark mode
+    color: '#f1f5f9',
   },
-  genericName: {
-    fontSize: 18,
-    color: '#334155', // Darker color for better visibility in light mode
+  medicineNameBn: {
+    fontSize: 20,
+    color: '#334155',
     marginBottom: 4,
   },
-  darkGenericName: {
-    color: '#e2e8f0', // Lighter color for dark mode
+  darkMedicineNameBn: {
+    color: '#e2e8f0',
   },
   manufacturer: {
     fontSize: 16,
-    color: '#334155', // Darker color for better visibility in light mode
-    marginBottom: 8,
+    color: '#334155',
+    marginBottom: 4,
   },
   darkManufacturer: {
-    color: '#cbd5e1', // Lighter color for dark mode
+    color: '#cbd5e1',
   },
-  dosage: {
-    fontSize: 16,
+  manufacturerBn: {
+    fontSize: 14,
+    color: '#475569',
+    marginBottom: 8,
+  },
+  darkManufacturerBn: {
+    color: '#94a3b8',
+  },
+  origin: {
+    fontSize: 14,
     color: '#00835A',
     fontWeight: '600',
   },
-  darkDosage: {
+  darkOrigin: {
+    color: '#4ade80',
+  },
+  originBn: {
+    fontSize: 12,
+    color: '#00835A',
+  },
+  darkOriginBn: {
     color: '#4ade80',
   },
   section: {
@@ -191,11 +261,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1e293b', // Darker color for better visibility in light mode
+    color: '#1e293b',
     marginBottom: 12,
   },
   darkSectionTitle: {
-    color: '#f1f5f9', // Lighter color for dark mode
+    color: '#f1f5f9',
   },
   listItem: {
     flexDirection: 'row',
@@ -208,12 +278,20 @@ const styles = StyleSheet.create({
   },
   sectionText: {
     fontSize: 15,
-    color: '#334155', // Darker color for better visibility in light mode
+    color: '#334155',
     lineHeight: 22,
     flex: 1,
   },
   darkSectionText: {
-    color: '#e2e8f0', // Lighter color for dark mode
+    color: '#e2e8f0',
+  },
+  noInfoText: {
+    fontStyle: 'italic',
+    textAlign: 'center',
+    color: '#64748b',
+  },
+  darkNoInfoText: {
+    color: '#94a3b8',
   },
 });
 

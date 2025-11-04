@@ -262,6 +262,94 @@ class ApiClient {
     }
   }
 
+  async searchMedicineByImage(imageUri: string): Promise<ApiResponse<any[]>> {
+    try {
+      const token = await AsyncStorage.getItem('access_token');
+      
+      if (!token) {
+        return { error: 'Not authenticated' };
+      }
+      
+      const formData = new FormData();
+      // For React Native, we need to use the URI directly
+      formData.append('image', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: 'medicine.jpg',
+      } as any);
+      
+      const response = await fetch(`${this.baseUrl}/medicines/search-by-image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type for FormData, let the browser set it with boundary
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = 'Failed to search medicine by image';
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          // If parsing fails, use the raw text or default message
+          errorMessage = errorText || errorMessage;
+        }
+        
+        return {
+          error: errorMessage,
+        };
+      }
+      
+      const data = await response.json();
+      return { data };
+    } catch (error) {
+      console.error('Medicine search by image error:', error);
+      return {
+        error: 'Network error - please check your connection and ensure the server is running',
+      };
+    }
+  }
+
+  async getMedicineById(id: string): Promise<ApiResponse<any>> {
+    try {
+      const response = await fetch(`${this.baseUrl}/medicines/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = 'Failed to fetch medicine details';
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          // If parsing fails, use the raw text or default message
+          errorMessage = errorText || errorMessage;
+        }
+        
+        return {
+          error: errorMessage,
+        };
+      }
+      
+      const data = await response.json();
+      return { data };
+    } catch (error) {
+      console.error('Get medicine by ID error:', error);
+      return {
+        error: 'Network error - please check your connection and ensure the server is running',
+      };
+    }
+  }
+
   async setAuthToken(token: string): Promise<void> {
     await AsyncStorage.setItem('access_token', token);
   }

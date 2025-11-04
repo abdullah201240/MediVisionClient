@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
+import { api } from '../lib/api';
+import { useAlert } from '../context/AlertContext';
 
 type ScanContentProps = {
   onMedicineScan?: (medicineData: any) => void;
@@ -12,93 +14,12 @@ type ScanContentProps = {
 const ScanContent: React.FC<ScanContentProps> = ({ onMedicineScan }) => {
   const { t } = useLanguage();
   const { isDarkMode } = useTheme();
+  const { showAlert } = useAlert();
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<any>(null);
   const [scanning, setScanning] = useState(false);
-
-  // Sample medicine data for different barcodes
-  const medicineDatabase: any = {
-    "1234567890128": {
-      id: '1',
-      name: 'Napa Extra',
-      genericName: 'Paracetamol + Caffeine',
-      manufacturer: 'Beximco Pharmaceuticals Ltd.',
-      dosage: '500mg + 65mg',
-      description: 'Napa Extra is a combination of Paracetamol and Caffeine. Paracetamol is an analgesic (painkiller) and antipyretic (fever reducer). Caffeine is added to enhance the pain-relieving effect of Paracetamol.',
-      indications: [
-        'Fever',
-        'Headache',
-        'Migraine',
-        'Toothache',
-        'Muscle pain',
-        'Joint pain',
-        'Menstrual pain'
-      ],
-      contraindications: [
-        'Hypersensitivity to paracetamol or caffeine',
-        'Severe hepatic impairment',
-        'Severe renal impairment',
-        'Glucose-6-phosphate dehydrogenase deficiency'
-      ],
-      sideEffects: [
-        'Nausea',
-        'Vomiting',
-        'Stomach pain',
-        'Allergic skin reactions',
-        'Liver damage (with overdose)'
-      ],
-      precautions: [
-        'Use with caution in patients with liver disease',
-        'Avoid alcohol consumption',
-        'Do not exceed recommended dose',
-        'Consult doctor if symptoms persist'
-      ],
-      interactions: [
-        'Cholestyramine may reduce absorption',
-        'Warfarin interaction may increase bleeding risk',
-        'Alcohol may increase liver toxicity'
-      ],
-      storage: 'Store in a cool, dry place away from direct sunlight. Keep out of reach of children.'
-    },
-    "9876543210987": {
-      id: '2',
-      name: 'Paracetamol',
-      genericName: 'Paracetamol',
-      manufacturer: 'Square Pharmaceuticals Ltd.',
-      dosage: '500mg',
-      description: 'Paracetamol is a common painkiller used to treat aches and pains. It can also be used to reduce a high temperature (fever).',
-      indications: [
-        'Fever',
-        'Headache',
-        'Muscle aches',
-        'Arthritis',
-        'Toothache',
-        'Cold and flu symptoms'
-      ],
-      contraindications: [
-        'Severe liver disease',
-        'Severe kidney disease',
-        'Alcoholism'
-      ],
-      sideEffects: [
-        'Nausea',
-        'Stomach pain',
-        'Loss of appetite',
-        'Liver damage (with overdose)'
-      ],
-      precautions: [
-        'Do not exceed recommended dose',
-        'Avoid alcohol',
-        'Consult doctor if symptoms persist'
-      ],
-      interactions: [
-        'Alcohol may increase liver toxicity',
-        'Warfarin may increase bleeding risk'
-      ],
-      storage: 'Store below 30°C, away from moisture and light.'
-    }
-  };
+  const [processingImage, setProcessingImage] = useState(false);
 
   useEffect(() => {
     if (!permission) {
@@ -130,24 +51,63 @@ const ScanContent: React.FC<ScanContentProps> = ({ onMedicineScan }) => {
   const handleBarcodeScanned = ({ type, data }: { type: string; data: string }) => {
     setScanning(true);
     
-    // Check if we have medicine data for this barcode
-    const medicineData = medicineDatabase[data];
-    
-    if (medicineData && onMedicineScan) {
-      // Navigate to medicine details page
-      onMedicineScan(medicineData);
-    } else {
-      // Show alert with scanned data
-      Alert.alert(
-        t('barcodeScanned'),
-        `${t('barcodeType')}: ${type}\n${t('data')}: ${data}`,
-        [
-          {
-            text: t('ok'),
-            onPress: () => setScanning(false),
-          },
-        ]
-      );
+    // In a real app, you would search for medicine by barcode
+    // For now, we'll show an alert with the scanned data
+    Alert.alert(
+      t('barcodeScanned'),
+      `${t('barcodeType')}: ${type}\n${t('data')}: ${data}`,
+      [
+        {
+          text: t('ok'),
+          onPress: () => setScanning(false),
+        },
+      ]
+    );
+  };
+
+  const captureAndSearchMedicine = async () => {
+    if (cameraRef.current && !processingImage) {
+      try {
+        setProcessingImage(true);
+        const photo = await cameraRef.current.takePictureAsync();
+        console.log('Photo taken:', photo);
+        
+        // Search for medicine by image
+        const response = await api.searchMedicineByImage(photo.uri);
+        
+        if (response.error) {
+          showAlert({
+            title: t('error'),
+            message: response.error,
+            type: 'error'
+          });
+          setProcessingImage(false);
+          return;
+        }
+        
+        if (response.data && response.data.length > 0) {
+          // If we found matching medicines, pass them to the callback
+          if (onMedicineScan) {
+            onMedicineScan(response.data);
+          }
+        } else {
+          // No matching medicines found
+          showAlert({
+            title: t('noMedicinesFound'),
+            message: t('noMedicinesFoundMessage'),
+            type: 'info'
+          });
+        }
+      } catch (error) {
+        console.error('Error capturing or searching medicine:', error);
+        showAlert({
+          title: t('error'),
+          message: t('failedToSearchMedicine'),
+          type: 'error'
+        });
+      } finally {
+        setProcessingImage(false);
+      }
     }
   };
 
@@ -194,20 +154,14 @@ const ScanContent: React.FC<ScanContentProps> = ({ onMedicineScan }) => {
           
           <TouchableOpacity 
             style={styles.captureButton} 
-            onPress={async () => {
-              if (cameraRef.current) {
-                try {
-                  const photo = await cameraRef.current.takePictureAsync();
-                  console.log('Photo taken:', photo);
-                  Alert.alert(t('photoTaken'), t('photoSavedToGallery'));
-                } catch (error) {
-                  console.error('Error taking photo:', error);
-                  Alert.alert(t('error'), t('failedToTakePhoto'));
-                }
-              }
-            }}
+            onPress={captureAndSearchMedicine}
+            disabled={processingImage}
           >
-            <View style={styles.captureInnerButton} />
+            {processingImage ? (
+              <ActivityIndicator size="large" color="white" />
+            ) : (
+              <View style={styles.captureInnerButton} />
+            )}
           </TouchableOpacity>
         </View>
       </CameraView>

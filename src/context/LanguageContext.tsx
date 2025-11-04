@@ -253,6 +253,16 @@ const translations = {
     preferNotToSay: 'Prefer not to say',
     selectDate: 'Select Date',
     notProvided: 'Not provided',
+    // Add missing translations for scan functionality
+    noMedicinesFound: 'No Medicines Found',
+    noMedicinesFoundMessage: 'No matching medicines were found. Please try again with a clearer image.',
+    failedToSearchMedicine: 'Failed to search for medicine. Please try again.',
+    // Add missing translations for medicine details
+    similarMedicines: 'Similar Medicines',
+    origin: 'Origin',
+    usage: 'Usage',
+    howToUse: 'How to Use',
+    noDetailedInformation: 'No detailed information available for this medicine.',
   },
   bn: {
     welcome: 'মেডিভিশনে স্বাগতম',
@@ -494,6 +504,16 @@ const translations = {
     preferNotToSay: 'বলতে চাই না',
     selectDate: 'তারিখ নির্বাচন করুন',
     notProvided: 'প্রদান করা হয়নি',
+    // Add missing translations for scan functionality
+    noMedicinesFound: 'কোন ওষুধ পাওয়া যায়নি',
+    noMedicinesFoundMessage: 'কোন মিল রয়েছে এমন ওষুধ পাওয়া যায়নি। দয়া করে একটি পরিষ্কার ছবি দিয়ে আবার চেষ্টা করুন।',
+    failedToSearchMedicine: 'ওষুধ অনুসন্ধান করতে ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।',
+    // Add missing translations for medicine details
+    similarMedicines: 'অনুরূপ ওষুধ',
+    origin: 'উৎপত্তি',
+    usage: 'ব্যবহার',
+    howToUse: 'কিভাবে ব্যবহার করবেন',
+    noDetailedInformation: 'এই ওষুধের জন্য কোন বিস্তারিত তথ্য উপলব্ধ নেই।',
   }
 };
 
@@ -523,6 +543,12 @@ export const useLanguage = (): LanguageContextType => {
   }
   return context;
 };
+
+
+
+
+
+
 
 
 

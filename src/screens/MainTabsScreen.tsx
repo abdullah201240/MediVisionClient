@@ -14,6 +14,7 @@ import PrivacyPolicyScreen from './PrivacyPolicyScreen';
 import AboutScreen from './AboutScreen';
 import HelpSupportScreen from './HelpSupportScreen';
 import MedicineDetailsScreen from './MedicineDetailsScreen';
+import MedicineSearchResultsScreen from './MedicineSearchResultsScreen';
 import UserManagementScreen from './UserManagementScreen';
 import MedicineManagementScreen from './MedicineManagementScreen';
 import { useAlert } from '../context/AlertContext';
@@ -21,7 +22,7 @@ import { useTheme } from '../context/ThemeContext';
 import { api } from '../lib/api';
 
 type NavigationMode = 'home' | 'scan' | 'history' | 'profile';
-type MainTabMode = NavigationMode | 'settings' | 'privacyPolicy' | 'about' | 'helpSupport' | 'medicineDetails' | 'adminProfile' | 'userManagement' | 'medicineManagement';
+type MainTabMode = NavigationMode | 'settings' | 'privacyPolicy' | 'about' | 'helpSupport' | 'medicineDetails' | 'adminProfile' | 'userManagement' | 'medicineManagement' | 'medicineSearchResults';
 
 type RootStackParamList = {
   Main: undefined;
@@ -83,6 +84,8 @@ const MainTabsScreen = () => {
     email: 'user@example.com'
   });
   const [selectedMedicine, setSelectedMedicine] = useState<any>(sampleMedicine);
+  const [scannedMedicines, setScannedMedicines] = useState<any[]>([]);
+  const [previousTab, setPreviousTab] = useState<MainTabMode>('home');
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { showAlert } = useAlert();
   const { isDarkMode } = useTheme();
@@ -110,6 +113,11 @@ const MainTabsScreen = () => {
     fetchProfile();
   }, []);
 
+  // Update previousTab when activeTab changes
+  useEffect(() => {
+    setPreviousTab(activeTab);
+  }, [activeTab]);
+
   const handleLogout = () => {
     // Clear auth token and navigate back to the main screen
     api.clearAuthToken();
@@ -126,13 +134,20 @@ const MainTabsScreen = () => {
     setActiveTab('medicineDetails');
   };
 
-  const handleMedicineScan = (medicineData: any) => {
-    setSelectedMedicine(medicineData);
-    setActiveTab('medicineDetails');
+  const handleMedicineScan = (medicines: any[]) => {
+    // Set the scanned medicines and navigate to the search results screen
+    setScannedMedicines(medicines);
+    setActiveTab('medicineSearchResults');
   };
 
   const handleMedicineUpload = (medicineData: any) => {
     setSelectedMedicine(medicineData);
+    setActiveTab('medicineDetails');
+  };
+
+  const handleMedicineSelectFromResults = (medicine: any) => {
+    // When a medicine is selected from search results, show its details
+    setSelectedMedicine(medicine);
     setActiveTab('medicineDetails');
   };
 
@@ -199,10 +214,24 @@ const MainTabsScreen = () => {
         return <AboutScreen onBackPress={() => setActiveTab(isAdmin ? 'adminProfile' : 'profile')} />;
       case 'helpSupport':
         return <HelpSupportScreen onBackPress={() => setActiveTab(isAdmin ? 'adminProfile' : 'profile')} />;
+      case 'medicineSearchResults':
+        return <MedicineSearchResultsScreen 
+          medicines={scannedMedicines} 
+          onMedicineSelect={handleMedicineSelectFromResults}
+          onBackPress={() => setActiveTab('scan')} 
+        />;
       case 'medicineDetails':
         return <MedicineDetailsScreen 
           medicine={selectedMedicine} 
-          onBackPress={() => setActiveTab('scan')} 
+          onBackPress={() => {
+            // If we came from search results, go back to search results
+            // Otherwise go back to scan
+            if (previousTab === 'medicineSearchResults' && scannedMedicines.length > 0) {
+              setActiveTab('medicineSearchResults');
+            } else {
+              setActiveTab('scan');
+            }
+          }} 
         />;
       default:
         return <DashboardContent 
@@ -230,7 +259,7 @@ const MainTabsScreen = () => {
   const shouldShowBackButton = () => {
     return activeTab === 'settings' || activeTab === 'privacyPolicy' || activeTab === 'about' || 
            activeTab === 'helpSupport' || activeTab === 'medicineDetails' || activeTab === 'userManagement' ||
-           activeTab === 'medicineManagement';
+           activeTab === 'medicineManagement' || activeTab === 'medicineSearchResults';
   };
 
   return (
