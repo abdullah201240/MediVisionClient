@@ -116,7 +116,8 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
   };
 
   const handleBack = () => {
-    navigation.goBack();
+    // Instead of going back, navigate to Main screen to avoid circular navigation
+    navigation.navigate('Main');
   };
 
   return (
