@@ -79,7 +79,7 @@ const ProfileContent = ({ onSettingsPress, onPrivacyPolicyPress, onAboutPress, o
           
           // Set profile image if available
           if (response.data.image) {
-            setProfileImage(`http://192.168.21.101:3000/uploads/users/${response.data.image}`);
+            setProfileImage(`${api.getBaseUrl()}/uploads/users/${response.data.image}`);
           }
         }
       } catch (err) {

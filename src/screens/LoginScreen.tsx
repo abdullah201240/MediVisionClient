@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Dimensions, Platform, TouchableOpacity, TextInp
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '../context/LanguageContext';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { api } from '../lib/api';
 
@@ -25,7 +24,6 @@ interface LoginScreenProps {
 const LoginScreen = ({ navigation }: LoginScreenProps) => {
   const { t, language } = useLanguage();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
